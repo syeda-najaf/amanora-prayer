@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  .font-arabic {
+    font-family: 'Amiri', serif;
+  }
+  .font-cinzel {
+    font-family: 'Cinzel', serif;
+  }
+}
+
+/* ============================================================
+   INNER BUTTON CRAFTSMANSHIP & ISLAMIC ILLUMINATION STYLES
+   ============================================================ */
+
+/* Primary Emerald & Gold Button with Inset Dual-Layer Bevel */
+.btn-jannah-inner {
+  position: relative;
+  background: linear-gradient(180deg, #1A4D3E 0%, #0E2E25 100%);
+  border: 1px solid rgba(201, 162, 77, 0.45);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 4px 0 rgba(0, 0, 0, 0.4),
+    0 4px 12px -2px rgba(14, 46, 37, 0.35);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-jannah-inner:hover {
+  background: linear-gradient(180deg, #225F4D 0%, #11362C 100%);
+  border-color: rgba(226, 196, 126, 0.8);
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -2px 6px 0 rgba(0, 0, 0, 0.5),
+    0 6px 18px -2px rgba(201, 162, 77, 0.3);
+}
+.btn-jannah-inner:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 
+    inset 0 2px 6px 0 rgba(0, 0, 0, 0.6),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.1),
+    0 2px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* Pure Gilded Gold Button with Inner Filigree Sheen */
+.btn-gold-inner {
+  position: relative;
+  background: linear-gradient(180deg, #E6C875 0%, #C9A24D 50%, #A8802E 100%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -2px 4px 0 rgba(110, 80, 20, 0.45),
+    0 4px 14px -2px rgba(201, 162, 77, 0.4);
+  color: #0E2B24;
+  font-weight: 800;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-gold-inner:hover {
+  background: linear-gradient(180deg, #F0D890 0%, #D4AE57 50%, #B88E35 100%);
+  border-color: #FFFFFF;
+  box-shadow: 
+    inset 0 1px 3px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -2px 6px 0 rgba(110, 80, 20, 0.5),
+    0 6px 20px -2px rgba(201, 162, 77, 0.55);
+}
+.btn-gold-inner:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 
+    inset 0 3px 8px 0 rgba(110, 80, 20, 0.6),
+    0 2px 6px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Secondary Inset Bevel Button (Soft Parchment & Mint) */
+.btn-secondary-inner {
+  position: relative;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F7F3 100%);
+  border: 1px solid rgba(201, 162, 77, 0.25);
+  box-shadow: 
+    inset 0 1px 0 0 #FFFFFF,
+    inset 0 -1px 2px 0 rgba(23, 61, 51, 0.08),
+    0 2px 8px -2px rgba(23, 61, 51, 0.08);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-secondary-inner:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #EBF2EC 100%);
+  border-color: rgba(201, 162, 77, 0.5);
+  box-shadow: 
+    inset 0 1px 0 0 #FFFFFF,
+    inset 0 -1px 3px 0 rgba(23, 61, 51, 0.12),
+    0 4px 12px -2px rgba(23, 61, 51, 0.12);
+}
+.btn-secondary-inner:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 
+    inset 0 2px 4px 0 rgba(23, 61, 51, 0.15);
+}
+
+/* Tasbih Physical Counter Button with Concentric Illumination Rings */
+.tasbih-disk {
+  position: relative;
+  background: radial-gradient(circle at 50% 35%, #254F42 0%, #15382E 60%, #0A221C 100%);
+  border: 3px solid #C9A24D;
+  box-shadow: 
+    inset 0 4px 8px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -6px 12px 0 rgba(0, 0, 0, 0.7),
+    0 12px 30px -4px rgba(10, 34, 28, 0.45),
+    0 0 0 6px rgba(201, 162, 77, 0.15);
+  transition: all 0.14s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.tasbih-disk:active {
+  transform: scale(0.96) translateY(2px);
+  box-shadow: 
+    inset 0 6px 14px 0 rgba(0, 0, 0, 0.8),
+    inset 0 -2px 4px 0 rgba(255, 255, 255, 0.15),
+    0 4px 12px -2px rgba(10, 34, 28, 0.3),
+    0 0 0 3px rgba(201, 162, 77, 0.25);
+}
+
+/* Shimmer Highlight Sweep for Active State */
+@keyframes goldShimmer {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  50% { transform: translateX(200%) skewX(-20deg); }
+  100% { transform: translateX(200%) skewX(-20deg); }
+}
+.animate-shimmer {
+  animation: goldShimmer 3.2s infinite ease-in-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 77, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 77, 0.6);
+}
