@@ -1,7 +1,7 @@
 {
   "name": "Amanora – Islamic Companion",
   "short_name": "Amanora",
-  "description": "Prayer times, Qibla, the full Quran with audio, Hadith, live Quran radio and daily moral cartoon stories.",
+  "description": "Prayer times, Qibla, the full Quran with audio, Hadith, live Quran radio and daily moral stories.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

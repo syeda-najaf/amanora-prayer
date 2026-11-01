@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShortStory } from '../types';
 
-interface AbdulBariCartoonProps {
+interface AbdulBariAnimationProps {
   story?: ShortStory;
   currentStep?: number;
   isSpeaking?: boolean;
@@ -11,7 +11,7 @@ interface AbdulBariCartoonProps {
   showWhiteboardText?: boolean;
 }
 
-export const AbdulBariCartoon: React.FC<AbdulBariCartoonProps> = ({
+export const AbdulBariAnimation: React.FC<AbdulBariAnimationProps> = ({
   story,
   currentStep = 0,
   isSpeaking = false,
@@ -87,7 +87,7 @@ export const AbdulBariCartoon: React.FC<AbdulBariCartoonProps> = ({
     <div className="relative w-full h-full flex flex-col justify-between select-none overflow-hidden rounded-2xl bg-[#FFFDF7]">
       
       {/* ==============================================================
-          REAL CARTOON SCENERY STAGE (Lush Paradise / Moral Story World)
+          REAL Animation SCENERY STAGE (Lush Paradise / Moral Story World)
           ============================================================== */}
       <div className="relative w-full flex-1 min-h-[340px] flex items-center justify-center p-3 overflow-hidden">
         
@@ -141,7 +141,7 @@ export const AbdulBariCartoon: React.FC<AbdulBariCartoonProps> = ({
         </div>
 
         {/* ==============================================================
-            INTERACTIVE REAL CARTOON PROPS (Seed/Tree, Wallet, Bread, Dua)
+            INTERACTIVE REAL Animation PROPS (Seed/Tree, Wallet, Bread, Dua)
             ============================================================== */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           {actionType === 'plant_seed' && (
@@ -228,7 +228,7 @@ export const AbdulBariCartoon: React.FC<AbdulBariCartoonProps> = ({
         </div>
 
         {/* ==============================================================
-            REAL ABDUL BARI CARTOON CHARACTER (Detailed Vector Rig)
+            REAL ABDUL BARI Animation CHARACTER (Detailed Vector Rig)
             ============================================================== */}
         <div
           className="relative z-20 flex flex-col items-center justify-center transition-transform duration-200 ease-out"
@@ -491,7 +491,7 @@ export const AbdulBariCartoon: React.FC<AbdulBariCartoonProps> = ({
         <div className="bg-[#FFFBEF] border-t-2 border-[#C9A24D]/40 p-3.5 space-y-2">
           <div className="flex items-center justify-between text-[10px] font-black tracking-wider text-[#9A7432] uppercase">
             <span>{story.tag} · SCENE {currentStep + 1}/{story.steps.length}</span>
-            <span className="text-stone-500">Moral Cartoon Story</span>
+            <span className="text-stone-500">Moral Animation Story</span>
           </div>
 
           <div className="space-y-1.5">

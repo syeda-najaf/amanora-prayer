@@ -90,37 +90,37 @@ const HADITHS = [
 ];
 
 /**
- * DAILY GOOD THING - simple, step-by-step cartoon lessons (whiteboard teacher style).
+ * DAILY GOOD THING - simple, step-by-step Animation lessons (whiteboard teacher style).
  * Each lesson reveals one line at a time. For REAL video, put your own .mp4 link in `video`.
  */
 const DEMO_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 const SHORTS = [
   {
-    id: 1, tag: "PATIENCE", title: "Patience Always Pays Off", cartoon: ["🧒", "🌱", "⏳", "🌳"], video: DEMO_VIDEO,
+    id: 1, tag: "PATIENCE", title: "Patience Always Pays Off", Animation: ["🧒", "🌱", "⏳", "🌳"], video: DEMO_VIDEO,
     steps: ["A boy planted a tiny seed 🌱", "He watered it every day, but nothing happened ⏳", "He felt like giving up... but he stayed patient", "Days later, the first leaf appeared 🌿", "That little seed grew into a tall, shady tree 🌳"],
     lesson: "Allah is with those who are patient.", reference: "Quran 2:153",
     narration: "A boy planted a tiny seed. He watered it every day, but nothing happened. He felt like giving up, but he stayed patient. Days later, the first leaf appeared, and in time the seed grew into a tall, shady tree. Patience always pays off. Allah is with those who are patient.",
   },
   {
-    id: 2, tag: "HONESTY", title: "Be Honest, Find Peace", cartoon: ["👦", "👛", "🤔", "😊"], video: DEMO_VIDEO,
+    id: 2, tag: "HONESTY", title: "Be Honest, Find Peace", Animation: ["👦", "👛", "🤔", "😊"], video: DEMO_VIDEO,
     steps: ["A boy found a wallet on the road 👛", "Nobody was watching 🤫", "But Allah sees everything 👁️", "He returned the wallet to its owner", "The owner prayed for him, and his heart felt calm 😊"],
     lesson: "Be honest, even when nobody is watching.", reference: "Quran 9:119",
     narration: "A boy found a wallet on the road. Nobody was watching. But he remembered that Allah sees everything. He returned the wallet to its owner. The owner prayed for him, and his heart felt calm. Honesty brings real peace.",
   },
   {
-    id: 3, tag: "GRATITUDE", title: "Gratitude Grows Blessings", cartoon: ["👧", "🍞", "💧", "🤲"], video: DEMO_VIDEO,
+    id: 3, tag: "GRATITUDE", title: "Gratitude Grows Blessings", Animation: ["👧", "🍞", "💧", "🤲"], video: DEMO_VIDEO,
     steps: ["A girl had one piece of bread 🍞", "She thought, this is so little", "Then she thought of people with no food at all", "She said Alhamdulillah 🤲", "Her heart felt full, and the meal felt blessed ✨"],
     lesson: "If you are grateful, I will give you more.", reference: "Quran 14:7",
     narration: "A girl had only one piece of bread. At first she thought it was too little. Then she remembered people who had no food at all. She said Alhamdulillah, and her heart felt full. Gratitude grows blessings.",
   },
   {
-    id: 4, tag: "DUA", title: "No Dua Is Ever Wasted", cartoon: ["🧕", "🤲", "🌙", "⭐"], video: DEMO_VIDEO,
+    id: 4, tag: "DUA", title: "No Dua Is Ever Wasted", Animation: ["🧕", "🤲", "🌙", "⭐"], video: DEMO_VIDEO,
     steps: ["Everyone was asleep at night 🌙", "A sister raised her hands 🤲", "She spoke to Allah from her heart", "Sometimes the answer is quick, sometimes it is delayed", "Allah answers at the best time ⭐"],
     lesson: "Call upon Me, and I will respond to you.", reference: "Quran 40:60",
     narration: "Everyone was asleep. A sister raised her hands and spoke to Allah from her heart. Sometimes the answer comes quickly, and sometimes it is delayed, but Allah always answers at the best time. No dua is ever wasted.",
   },
   {
-    id: 5, tag: "CHARACTER", title: "Gentleness Wins Hearts", cartoon: ["🧑", "😡", "🌸", "🤝"], video: DEMO_VIDEO,
+    id: 5, tag: "CHARACTER", title: "Gentleness Wins Hearts", Animation: ["🧑", "😡", "🌸", "🤝"], video: DEMO_VIDEO,
     steps: ["One man spoke in anger 😡", "Another answered gently 🌸", "The anger cooled down", "They shook hands 🤝", "The Prophet ﷺ said gentleness beautifies everything"],
     lesson: "Allah loves gentleness in all matters.", reference: "Sahih Muslim 2594",
     narration: "One man spoke in anger. Another answered him gently, and the anger cooled down. They shook hands. The Prophet, peace be upon him, taught that gentleness beautifies everything it touches.",
@@ -179,15 +179,15 @@ function VideoPane({ uri, active }: { uri: string; active: boolean }) {
   return <VideoView player={player} style={s.video} contentFit="cover" nativeControls />;
 }
 
-/* ============================== SHORT CARD (video + cartoon board) ============================== */
+/* ============================== SHORT CARD (video + Animation board) ============================== */
 function ShortCard({ item, active, height }: { item: (typeof SHORTS)[number]; active: boolean; height: number }) {
   const [step, setStep] = useState(0);
   const [speaking, setSpeaking] = useState(false);
-  const [mode, setMode] = useState<"cartoon" | "video">("cartoon");
+  const [mode, setMode] = useState<"Animation" | "video">("Animation");
   const bob = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(0)).current;
 
-  // Characters float up and down like a cartoon
+  // Characters float up and down like a Animation
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
       Animated.timing(bob, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
@@ -199,7 +199,7 @@ function ShortCard({ item, active, height }: { item: (typeof SHORTS)[number]; ac
 
   // Board writes one line at a time (Abdul Bari style) while the card is on screen
   useEffect(() => {
-    if (!active || mode !== "cartoon") { setStep(0); return; }
+    if (!active || mode !== "Animation") { setStep(0); return; }
     setStep(0);
     const t = setInterval(() => setStep(v => (v < item.steps.length ? v + 1 : v)), 2200);
     return () => clearInterval(t);
@@ -219,15 +219,15 @@ function ShortCard({ item, active, height }: { item: (typeof SHORTS)[number]; ac
     Speech.speak(item.narration, { language: "en-US", rate: 0.9, onDone: () => setSpeaking(false), onStopped: () => setSpeaking(false), onError: () => setSpeaking(false) });
   };
 
-  const emoji = item.cartoon[Math.min(step, item.cartoon.length - 1)];
+  const emoji = item.Animation[Math.min(step, item.Animation.length - 1)];
 
   return (
     <View style={[s.shortCard, { height }]}>
       <View style={s.shortTop}>
         <View style={s.shortTag}><Text style={s.shortTagText}>{item.tag}</Text></View>
         <View style={s.modeSwitch}>
-          <TouchableOpacity onPress={() => setMode("cartoon")} style={[s.modeBtn, mode === "cartoon" && s.modeBtnOn]}>
-            <Text style={[s.modeText, mode === "cartoon" && s.modeTextOn]}>🎨 Cartoon</Text>
+          <TouchableOpacity onPress={() => setMode("Animation")} style={[s.modeBtn, mode === "Animation" && s.modeBtnOn]}>
+            <Text style={[s.modeText, mode === "Animation" && s.modeTextOn]}>🎨 Animation</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { Speech.stop(); setSpeaking(false); setMode("video"); }} style={[s.modeBtn, mode === "video" && s.modeBtnOn]}>
             <Text style={[s.modeText, mode === "video" && s.modeTextOn]}>🎬 Video</Text>
@@ -608,7 +608,7 @@ function AppInner() {
         <Text style={s.dailyText}>{dailyBaat.text}</Text>
         <View style={s.between}>
           <Text style={s.dailyRef}>{dailyBaat.ref}</Text>
-          <Text style={s.dailyLink}>Watch cartoon ▶</Text>
+          <Text style={s.dailyLink}>Watch Animation ▶</Text>
         </View>
       </TouchableOpacity>
 

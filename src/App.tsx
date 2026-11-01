@@ -183,7 +183,7 @@ export default function App() {
       <button className="daily" onClick={() => go("Reels")}>
         <small className="gold">✨ TODAY'S GOOD THING</small>
         <p>{good.text}</p>
-        <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Watch today's cartoon ▶</b></span>
+        <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Watch today's Animation ▶</b></span>
       </button>
 
       <div className="grid">

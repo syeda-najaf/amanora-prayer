@@ -1,6 +1,6 @@
 {
-  "name": "Amanora - Islamic Companion & Abdul Bari Cartoon Shorts",
-  "description": "Spiritual Islamic sanctuary featuring prayer times, Quran recitations, Hadith, illuminated inner button designs, Mufti lectures, unique family logins, and real Abdul Bari moral cartoon shorts.",
+  "name": "Amanora - Islamic Companion & Abdul Bari Shorts",
+  "description": "Spiritual Islamic sanctuary featuring prayer times, Quran recitations, Hadith, illuminated inner button designs, Mufti lectures, unique family logins, and real Abdul Bari moral shorts.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
