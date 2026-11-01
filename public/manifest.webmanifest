@@ -1,0 +1,17 @@
+{
+  "name": "Amanora – Islamic Companion",
+  "short_name": "Amanora",
+  "description": "Prayer times, Qibla, the full Quran with audio, Hadith, live Quran radio and daily moral cartoon stories.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E2B24",
+  "theme_color": "#0E2B24",
+  "categories": ["lifestyle", "education"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

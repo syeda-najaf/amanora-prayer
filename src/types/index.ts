@@ -67,7 +67,7 @@ export interface MuftiBayan {
   id: string;
   speaker: string;
   title: string;
-  category: "Peace" | "Family" | "Repentance" | "Jannah" | "Youth" | "Seerah";
+  category: "Peace" | "Family" | "Repentance" | "Jannah" | "Youth" | "Seerah" | "Character" | "Wealth" | "Akhirah";
   duration: string;
   audioUrl: string;
   coverImage: string;
@@ -119,6 +119,9 @@ export interface HadithItem {
   arabic: string;
   meaning: string;
   reference: string;
+  narrator?: string;
+  reflection?: string;
+  chapter?: string;
 }
 
 export interface ShortStory {
