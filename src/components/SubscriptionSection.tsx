@@ -40,9 +40,9 @@ const SUBSCRIPTION_REASONS: SubscriptionReason[] = [
   {
     id: 'abdul_bari',
     icon: '🎨',
-    title: '2. Complete Abdul Bari Animation Library & Offline Mode',
+    title: '2. Complete Abdul Bari Cartoon Library & Offline Mode',
     subtitle: 'Wholesome, ad-free Islamic animation safe for children',
-    description: 'Unlock all 30+ moral Animation episodes with downloadable offline videos for car rides and family travels. Zero third-party ads, zero tracking, zero algorithmic brain-rot. Clean Islamic values taught with joy and humor.',
+    description: 'Unlock all 30+ moral cartoon episodes with downloadable offline videos for car rides and family travels. Zero third-party ads, zero tracking, zero algorithmic brain-rot. Clean Islamic values taught with joy and humor.',
     moralImpact: 'Prophetic Sunnah · "The best gift a father can give his child is good manners."'
   },
   {
@@ -78,7 +78,7 @@ const PLANS: SubscriptionPlan[] = [
     price: '$4.99',
     period: 'per month',
     benefits: [
-      'Unlimited Abdul Bari Animation Episodes',
+      'Unlimited Abdul Bari Cartoon Episodes',
       'Download stories for offline family viewing',
       '15+ Studio Quran Reciters (320kbps)',
       '100% Ad-Free Sanctuary Experience',
@@ -555,7 +555,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
           <span>Our Ethical Free Core Commitment</span>
         </h4>
         <p className="leading-relaxed">
-          The core obligatory worship tools—prayer times, basic Quran reading, and daily Hadith—are and will <strong>always remain 100% free</strong> for all Muslims worldwide. Subscriptions exist exclusively for families and patrons who wish to fund global Waqf sponsorships, access unlimited animated Animation releases, and keep our servers running without ads.
+          The core obligatory worship tools—prayer times, basic Quran reading, and daily Hadith—are and will <strong>always remain 100% free</strong> for all Muslims worldwide. Subscriptions exist exclusively for families and patrons who wish to fund global Waqf sponsorships, access unlimited animated cartoon releases, and keep our servers running without ads.
         </p>
 
         {subscriptionState.isSubscribed && (
@@ -596,7 +596,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
             </h3>
 
             <p className="text-xs text-stone-600 leading-relaxed">
-              Your patron status is now active. All 30+ Abdul Bari moral Animation shorts, studio reciters, VIP Mufti lectures, and offline downloads are unlocked.
+              Your patron status is now active. All 30+ Abdul Bari moral cartoon shorts, studio reciters, VIP Mufti lectures, and offline downloads are unlocked.
             </p>
 
             {/* Waqf Sponsorship Certificate box */}

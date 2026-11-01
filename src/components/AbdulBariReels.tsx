@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShortStory } from '../types';
-import { AbdulBariAnimation } from './AbdulBariAnimation';
+import { AbdulBariCartoon } from './AbdulBariCartoon';
 import { IslamicButton } from './IslamicButton';
 import { 
   Play, 
@@ -32,7 +32,7 @@ export const AbdulBariReels: React.FC<AbdulBariReelsProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [mode, setMode] = useState<'Animation' | 'video'>('Animation');
+  const [mode, setMode] = useState<'cartoon' | 'video'>('cartoon');
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
   const [savedStories, setSavedStories] = useState<number[]>([]);
 
@@ -56,9 +56,9 @@ export const AbdulBariReels: React.FC<AbdulBariReelsProps> = ({
     };
   }, []);
 
-  // Step-by-step Animation progression while speaking
+  // Step-by-step cartoon progression while speaking
   useEffect(() => {
-    if (mode !== 'Animation' || !isSpeaking) return;
+    if (mode !== 'cartoon' || !isSpeaking) return;
 
     const interval = setInterval(() => {
       setActiveStep(prev => {
@@ -158,15 +158,15 @@ export const AbdulBariReels: React.FC<AbdulBariReelsProps> = ({
             <button
               onClick={() => {
                 stopNarration();
-                setMode('Animation');
+                setMode('cartoon');
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                mode === 'Animation'
+                mode === 'cartoon'
                   ? 'bg-[#C9A24D] text-[#0E2B24] shadow-xs'
                   : 'text-stone-300 hover:text-white'
               }`}
             >
-              <span>🎨 Animation Studio</span>
+              <span>🎨 Cartoon Studio</span>
             </button>
 
             <button
@@ -204,9 +204,9 @@ export const AbdulBariReels: React.FC<AbdulBariReelsProps> = ({
         
         {/* Left Column (7 cols): Animated Character Stage */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center relative min-h-[420px] bg-black/20 rounded-2xl border border-white/10 p-2 overflow-hidden">
-          {mode === 'Animation' ? (
+          {mode === 'cartoon' ? (
             <div className="w-full h-full min-h-[400px] flex items-center justify-center">
-              <AbdulBariAnimation
+              <AbdulBariCartoon
                 story={currentStory}
                 currentStep={activeStep}
                 isSpeaking={isSpeaking}

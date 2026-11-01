@@ -13,13 +13,13 @@ interface SwiftCodeFile {
 
 const SWIFT_FILES: SwiftCodeFile[] = [
   {
-    id: 'Animation-view',
-    filename: 'AbdulBariAnimationView.swift',
+    id: 'cartoon-view',
+    filename: 'AbdulBariCartoonView.swift',
     title: 'Abdul Bari Seamless Animation Engine',
     description: 'SwiftUI Canvas & TimelineView vector character renderer with 60/120fps continuous breathing, procedural eye blinking, and synchronized mouth phonemes.',
     badge: 'SwiftUI Canvas',
     code: `//
-//  AbdulBariAnimationView.swift
+//  AbdulBariCartoonView.swift
 //  Amanora - Islamic Companion & Moral Stories
 //
 //  Seamless 60/120 FPS vector character animation engine for Swift.
@@ -36,8 +36,8 @@ public enum ActionPropType: String, CaseIterable, Sendable {
     case plantSeed, returnWallet, shareBread, duaNight, gentleWords
 }
 
-/// Seamless Vector-Rendered Abdul Bari Animation Character
-public struct AbdulBariAnimationView: View {
+/// Seamless Vector-Rendered Abdul Bari Cartoon Character
+public struct AbdulBariCartoonView: View {
     public let emotion: StoryEmotion
     public let actionProp: ActionPropType
     public let isSpeaking: Bool
@@ -482,7 +482,7 @@ public struct IslamicInnerBevelButtonStyle: ButtonStyle {
 //  AbdulBariReelsPlayerView.swift
 //  Amanora - Islamic Companion
 //
-//  SwiftUI Vertical Snapping Reels Player with Abdul Bari Animations.
+//  SwiftUI Vertical Snapping Reels Player with Abdul Bari Cartoons.
 //
 
 import SwiftUI
@@ -575,7 +575,7 @@ private struct ReelCardView: View {
             .padding(.top, 16)
             
             // Abdul Bari Animated Canvas
-            AbdulBariAnimationView(
+            AbdulBariCartoonView(
                 emotion: story.emotion,
                 actionProp: story.actionProp,
                 isSpeaking: isNarrating,
@@ -619,7 +619,7 @@ private struct ReelCardView: View {
 ];
 
 export const SwiftCodeViewer: React.FC = () => {
-  const [activeFileId, setActiveFileId] = useState<string>('Animation-view');
+  const [activeFileId, setActiveFileId] = useState<string>('cartoon-view');
   const [copied, setCopied] = useState<boolean>(false);
 
   const activeFile = SWIFT_FILES.find(f => f.id === activeFileId) || SWIFT_FILES[0];
@@ -763,7 +763,7 @@ export const SwiftCodeViewer: React.FC = () => {
             <h4 className="font-bold text-stone-900">Xcode iOS Integration Guide:</h4>
             <p className="mt-0.5 leading-normal">
               1. Drag these Swift files into your Xcode iOS project folder.<br />
-              2. Add AbdulBariAnimationView to your SwiftUI hierarchy or apply the IslamicInnerBevelButtonStyle to your buttons.
+              2. Add AbdulBariCartoonView to your SwiftUI hierarchy or apply the IslamicInnerBevelButtonStyle to your buttons.
             </p>
           </div>
         </div>

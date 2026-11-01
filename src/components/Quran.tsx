@@ -119,13 +119,12 @@ export function Quran({ settings }: { settings: Settings }) {
 
   return (
     <div className="screen">
-      <header className="head">
+      <header className="quran-heading">
         <span className="kicker">THE NOBLE QURAN</span>
-        <h2>Quran</h2>
-        <p className="muted">All 604 pages with recitation. Tap an ayah to play it or read its meaning.</p>
+        <div className="quran-heading-row"><div><h2>Quran</h2><p className="muted">A calm, page-by-page Mushaf experience</p></div><span className="quran-seal">۞</span></div>
       </header>
 
-      <div className="row gap">
+      <div className="quran-controls">
         <button className="select" onClick={() => setPicker(!picker)}>
           <small>SURAH</small>
           <b>{currentSurah?.englishName || "Choose"} ⌄</b>
@@ -152,22 +151,23 @@ export function Quran({ settings }: { settings: Settings }) {
         </div>
       )}
 
-      <button className={"btn wide " + (playing ? "danger" : "")} onClick={playPage} disabled={loading || !ayahs.length}>
-        {playing ? "■  Stop recitation" : "▶  Play this page"}
-      </button>
+      <div className="quran-actionbar">
+        <button className={"btn quran-play " + (playing ? "danger" : "")} onClick={playPage} disabled={loading || !ayahs.length}>
+          {playing ? "■ Stop recitation" : "▶ Play this page"}
+        </button>
+        <button className="chip" onClick={() => { const n = saved ? bookmarks.filter((x) => x !== page) : [...bookmarks, page]; setBookmarks(n); }}>{saved ? "★ Saved" : "☆ Save page"}</button>
+      </div>
 
-      <div className="toolbar">
+      <div className="quran-page-nav">
+        <button className="chip" disabled={page <= 1} onClick={() => turn(page - 1)}>‹ Previous</button>
         <b>Page {page} <span className="muted">/ 604</span></b>
-        <div className="row gap-s">
-          <button className="chip" onClick={() => { const n = saved ? bookmarks.filter((x) => x !== page) : [...bookmarks, page]; setBookmarks(n); }}>{saved ? "★ Saved" : "☆ Save page"}</button>
-          <button className="chip" disabled={page <= 1} onClick={() => turn(page - 1)}>‹ Prev</button>
-          <button className="chip" disabled={page >= 604} onClick={() => turn(page + 1)}>Next ›</button>
-        </div>
+        <button className="chip" disabled={page >= 604} onClick={() => turn(page + 1)}>Next ›</button>
       </div>
 
       <div className="mushaf" onTouchStart={(e) => (touchX.current = e.touches[0].clientX)} onTouchEnd={onTouchEnd}>
         <div className="ribbon" />
         <div className="mushaf-inner">
+          <div className="mushaf-topline"><span>{currentSurah?.englishName || "Al-Quran"}</span><span>الْقُرْآنُ الْكَرِيمُ</span><span>{page} / ٦٠٤</span></div>
           {loading ? (
             <div className="center pad">Loading page…</div>
           ) : error ? (
@@ -178,24 +178,29 @@ export function Quran({ settings }: { settings: Settings }) {
           ) : (
             <div className="ar mushaf-text" dir="rtl">
               {ayahs.map((ay) => (
-                <span key={ay.number}>
+                <div className="mushaf-ayah-group" key={ay.number}>
                   {ay.numberInSurah === 1 && ay.surah && (
-                    <span className="surah-banner">
+                    <div className="surah-banner">
                       <span>۞ {ay.surah.name} ۞</span>
                       {ay.surah.number !== 1 && ay.surah.number !== 9 && <span className="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>}
-                    </span>
+                    </div>
                   )}
-                  <span
-                    className={"ayah" + (playing === ay.number ? " playing" : "") + (selected === ay.number ? " selected" : "")}
+                  <button
+                    type="button"
+                    className={"mushaf-ayah" + (playing === ay.number ? " playing" : "") + (selected === ay.number ? " selected" : "")}
                     onClick={() => setSelected(selected === ay.number ? null : ay.number)}
+                    aria-label={`${ay.surah?.englishName || "Quran"}, ayah ${ay.numberInSurah}`}
                   >
-                    {strip(ay)} <span className="end">﴿{ay.numberInSurah}﴾</span>
-                  </span>{" "}
-                </span>
+                    <span className="mushaf-ayah-text">{strip(ay)}</span>
+                    <span className="end" aria-hidden="true">۞{ay.numberInSurah}۞</span>
+                  </button>
+                  <div className="ayah-rule" aria-hidden="true"><span>◇</span></div>
+                </div>
               ))}
             </div>
           )}
-          <div className="page-no">✧ {page} ✧</div>
+          <div className="mushaf-bottomline"><span>۞</span><span>{currentSurah?.name || "القرآن الكريم"}</span><span>۞</span></div>
+          <div className="page-no">{page}</div>
         </div>
       </div>
 
@@ -230,7 +235,7 @@ export function Quran({ settings }: { settings: Settings }) {
           </div>
         </div>
       )}
-      <p className="note">Quran text and recitation come live from AlQuran Cloud and Islamic Network. Swipe or use the arrow keys to turn pages.</p>
+      <p className="note quran-note">Quran text and recitation are loaded from AlQuran Cloud and Islamic Network. Swipe right for the next page, or use the page controls.</p>
     </div>
   );
 }

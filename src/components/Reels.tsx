@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactElement } from "react";
 import { STORIES, Story } from "../data/content";
 import type { MyLink } from "../types";
 import { dayOfYear, shareText, speak, stopSpeak, useStored, youtubeId } from "../lib";
@@ -120,7 +121,7 @@ export function Reels() {
     setTitle(""); setUrl(""); setErr(""); setAdding(false);
   };
 
-  const items: { key: string; node: (active: boolean) => JSX.Element }[] = [
+  const items: { key: string; node: (active: boolean) => ReactElement }[] = [
     ...links.map((l) => ({ key: l.id, node: (a: boolean) => <LinkReel item={l} active={a} onRemove={() => setLinks(links.filter((x) => x.id !== l.id))} /> })),
     ...stories.map((s, i) => ({ key: "s" + s.id, node: (a: boolean) => <StoryReel story={s} active={a} isToday={i === 0} /> })),
   ];

@@ -1,5 +1,5 @@
 // Amanora service worker: makes the app installable and usable offline.
-const CACHE = "amanora-v1";
+const CACHE = "amanora-v2-plus";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./favicon.svg"];
 const API_HOSTS = /(api\.alquran\.cloud|api\.aladhan\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|mp3quran\.net|bigdatacloud\.net)/;
 

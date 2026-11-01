@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactElement } from "react";
 import type { Coords, PrayerTime, Settings } from "./types";
 import { AUTHENTIC_HADITHS } from "./data/hadiths";
 import { DAILY_GOOD, RECITERS, TRANSLATIONS } from "./data/content";
@@ -13,8 +14,9 @@ import { Listen } from "./components/Listen";
 import { Hadith } from "./components/Hadith";
 import { Worship } from "./components/Worship";
 import { Learn } from "./components/Learn";
+import { Plus } from "./components/Plus";
 
-type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Profile" | "Reels" | "Listen" | "Hadith" | "Worship";
+type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Hadith" | "Worship";
 
 const DEFAULTS: Settings = { name: "", method: 3, reciter: "ar.alafasy", translation: "en.sahih", notify: false };
 
@@ -23,6 +25,7 @@ const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "Quran", icon: "۞", label: "Quran" },
   { id: "Explore", icon: "✧", label: "Explore" },
   { id: "Learn", icon: "▤", label: "Learn" },
+  { id: "Plus", icon: "✦", label: "Plus" },
   { id: "Profile", icon: "♡", label: "Profile" },
 ];
 
@@ -43,6 +46,9 @@ export default function App() {
   const [journal, setJournal] = useStored<string>("journal", "");
   const [quranPage] = useStored<number>("quran-page", 1);
   const [homeFeedback, setHomeFeedback] = useStored<"yes" | "no" | null>("feedback-home", null);
+  const [oled, setOled] = useStored<boolean>("oled-theme", false);
+  const [paymentPlan, setPaymentPlan] = useState<"monthly" | "yearly">("monthly");
+  const [homeWidgets, setHomeWidgets] = useStored<string[]>("home-widgets", ["Quran", "Reels", "Listen", "Hadith", "Worship", "Learn"]);
 
   const [times, setTimes] = useState<PrayerTime[]>([]);
   const [hijri, setHijri] = useState("");
@@ -58,9 +64,15 @@ export default function App() {
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
   useEffect(() => { document.title = `Amanora – ${tab}`; }, [tab]);
   useEffect(() => {
-    const h = (e: any) => { e.preventDefault(); setInstallEvt(e); };
-    window.addEventListener("beforeinstallprompt", h);
-    return () => window.removeEventListener("beforeinstallprompt", h);
+    const syncInstallPrompt = () => setInstallEvt((window as any).__amanoraInstallPrompt ?? null);
+    const clearInstallPrompt = () => setInstallEvt(null);
+    syncInstallPrompt();
+    window.addEventListener("amanora-install-ready", syncInstallPrompt);
+    window.addEventListener("amanora-app-installed", clearInstallPrompt);
+    return () => {
+      window.removeEventListener("amanora-install-ready", syncInstallPrompt);
+      window.removeEventListener("amanora-app-installed", clearInstallPrompt);
+    };
   }, []);
 
   /* ---- location ---- */
@@ -136,10 +148,20 @@ export default function App() {
     else alert("Notifications are blocked. Allow them in your browser settings.");
   };
   const install = async () => {
-    if (!installEvt) return;
-    installEvt.prompt();
-    await installEvt.userChoice.catch(() => {});
-    setInstallEvt(null);
+    const promptEvent = installEvt ?? (window as any).__amanoraInstallPrompt;
+    if (!promptEvent) {
+      alert("Amanora is not ready for automatic installation in this browser. In Chrome, open the menu and choose Install app or Add to Home screen.");
+      return;
+    }
+    try {
+      await promptEvent.prompt();
+      await promptEvent.userChoice;
+    } catch (error) {
+      console.error("Amanora install prompt failed:", error);
+    } finally {
+      (window as any).__amanoraInstallPrompt = null;
+      setInstallEvt(null);
+    }
   };
   const resetAll = () => {
     if (!confirm("Delete all saved data on this device (bookmarks, prayer log, journal, my links)?")) return;
@@ -183,13 +205,13 @@ export default function App() {
       <button className="daily" onClick={() => go("Reels")}>
         <small className="gold">✨ TODAY'S GOOD THING</small>
         <p>{good.text}</p>
-        <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Watch today's Animation ▶</b></span>
+        <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Watch today's cartoon ▶</b></span>
       </button>
 
       <div className="grid">
         {([
           ["Quran", "📖"], ["Reels", "🎬"], ["Listen", "🎧"], ["Hadith", "🕌"], ["Worship", "📿"], ["Learn", "🎓"],
-        ] as [Tab, string][]).map(([t, i]) => (
+        ] as [Tab, string][]).filter(([t]) => homeWidgets.includes(t)).map(([t, i]) => (
           <button key={t} className="tile" onClick={() => go(t)}><span className="tile-ic">{i}</span>{t}</button>
         ))}
       </div>
@@ -257,6 +279,9 @@ export default function App() {
       <button className="hall" onClick={() => go("Worship")}>
         <span className="hall-icon">🧭</span><span className="grow"><b>Worship & Qibla</b><small>Adhkar, tasbih and direction to the Kaaba</small></span><span className="gold">›</span>
       </button>
+      <button className="hall" onClick={() => go("Learn")}>
+        <span className="hall-icon">🎓</span><span className="grow"><b>Islamic Learning</b><small>Continue your learning paths and lessons</small></span><span className="gold">›</span>
+      </button>
       <div className="card">
         <small className="gold">A GENTLE REMINDER</small>
         <p className="hadith-en">Take one small step today. Consistency in good deeds matters.</p>
@@ -276,6 +301,8 @@ export default function App() {
         <div><b>{totalPrayers}</b><small>Prayers logged</small></div>
         <div><b>{doneToday.length}/5</b><small>Today</small></div>
       </div>
+
+      <button className="plus-hero me-plus-link" onClick={() => go("Plus")}><span className="plus-eyebrow">YOUR NEXT STEP</span><h3>Amanora Plus ✦</h3><p>Explore Academy tracks, personal progress and premium sanctuary features.</p><b>Explore Plus →</b></button>
 
       <div className="card">
         <h3>Settings</h3>
@@ -304,7 +331,7 @@ export default function App() {
         {installEvt && <button className="btn gold-btn wide" onClick={install}>⬇ Install Amanora on this device</button>}
       </div>
 
-      <UpiPayment />
+      <UpiPayment initialPlan={paymentPlan} />
 
       <div className="card">
         <h3>My journal</h3>
@@ -329,11 +356,12 @@ export default function App() {
     </div>
   );
 
-  const screen: Record<Tab, JSX.Element> = {
+  const screen: Record<Tab, ReactElement> = {
     Home: home,
     Quran: <Quran settings={s} />,
     Explore: explore,
     Learn: <Learn />,
+    Plus: <Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} />,
     Profile: me,
     Reels: <Reels />,
     Listen: <Listen />,
@@ -344,7 +372,7 @@ export default function App() {
   if (gate) return <Gate onDone={enter} />;
 
   return (
-    <div className={"app" + (tab === "Reels" ? " reels-mode" : "")}>
+    <div className={"app" + (tab === "Reels" ? " reels-mode" : "") + (oled ? " oled-theme" : "")}>
       <main className="main">{screen[tab]}</main>
       <nav className="nav">
         {NAV.map((n) => (

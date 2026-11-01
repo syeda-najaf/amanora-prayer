@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import "./UpiPayment.css";
 
@@ -23,8 +23,9 @@ function formatINR(value: number) {
   }).format(value);
 }
 
-export default function UpiPayment() {
-  const [plan, setPlan] = useState<Plan>("monthly");
+export default function UpiPayment({ initialPlan = "monthly" }: { initialPlan?: "monthly" | "yearly" }) {
+  const [plan, setPlan] = useState<Plan>(initialPlan);
+  useEffect(() => { setPlan(initialPlan); }, [initialPlan]);
   const [customAmount, setCustomAmount] = useState("101");
   const [showQR, setShowQR] = useState(true);
   const [copied, setCopied] = useState(false);

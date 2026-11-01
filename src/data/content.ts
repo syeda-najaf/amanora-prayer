@@ -9,7 +9,7 @@ export interface Story {
   narration: string;
 }
 
-// Daily moral Animation stories. One new story comes first each day; they repeat after the last one.
+// Daily moral cartoon stories. One new story comes first each day; they repeat after the last one.
 export const STORIES: Story[] = [
   { id: 1, tag: "PATIENCE", title: "Patience Always Pays Off", emoji: ["🧒", "🌱", "⏳", "🌳"],
     steps: ["A boy planted a tiny seed 🌱", "He watered it every day, but nothing happened ⏳", "He felt like giving up... but he stayed patient", "Days later, the first leaf appeared 🌿", "That little seed grew into a tall, shady tree 🌳"],
