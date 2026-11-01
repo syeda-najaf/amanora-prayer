@@ -511,3 +511,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-w
   .mushaf-ayah-text { line-height:1.85; }
   .ayah-rule { height:9px; }
 }
+
+.azan-settings{display:grid;gap:12px;margin:14px 0;padding:14px;border:1px solid var(--line, #e7e1d5);border-radius:18px;background:rgba(28,78,64,.035)}
+.azan-settings .chip input{accent-color:#1c4e40}
+.azan-settings>small{line-height:1.55}

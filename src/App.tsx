@@ -50,6 +50,7 @@ export default function App() {
   const [paymentPlan, setPaymentPlan] = useState<"monthly" | "yearly">("monthly");
   const [homeWidgets, setHomeWidgets] = useStored<string[]>("home-widgets", ["Quran", "Reels", "Listen", "Hadith", "Worship", "Learn"]);
 
+  const [azanPrefs, setAzanPrefs] = useStored<Record<string, boolean>>("azan-prayer-prefs", { Fajr: true, Dhuhr: true, Asr: true, Maghrib: true, Isha: true });
   const [times, setTimes] = useState<PrayerTime[]>([]);
   const [hijri, setHijri] = useState("");
   const [timesErr, setTimesErr] = useState("");
@@ -111,14 +112,21 @@ export default function App() {
     return { name: "Fajr", date: new Date(times[0].date.getTime() + 86400000), label: "Fajr (tomorrow)" };
   }, [times, now]);
 
-  // prayer-time reminder while the app is open or installed
+  // Schedule the next enabled prayer while Amanora is running. A web PWA cannot
+  // wake itself at an exact time after the browser has been fully closed; that
+  // requires a push service/backend and platform-specific notification setup.
   useEffect(() => {
-    if (!s.notify || !next || typeof Notification === "undefined" || Notification.permission !== "granted") return;
-    const ms = next.date.getTime() - Date.now();
+    if (!s.notify || !times.length || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const upcoming = times
+      .filter((p) => azanPrefs[p.name] !== false)
+      .map((p) => p.date.getTime() > Date.now() ? p : { ...p, date: new Date(p.date.getTime() + 86400000) })
+      .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+    if (!upcoming) return;
+    const ms = upcoming.date.getTime() - Date.now();
     if (ms <= 0 || ms > 2147483000) return;
-    const t = setTimeout(() => notifyUser(`Time for ${next.name}`, "Take a moment to pray. 🤲"), ms);
-    return () => clearTimeout(t);
-  }, [next, s.notify]);
+    const t = window.setTimeout(() => notifyUser(`It's time for ${upcoming.name} Salah`, "Amanora prayer reminder 🤲"), ms);
+    return () => window.clearTimeout(t);
+  }, [times, s.notify, azanPrefs, today]);
 
   /* ---- prayer log and streak (real, from what you tick) ---- */
   const doneToday = log[today] || [];
@@ -325,7 +333,15 @@ export default function App() {
         <button className={"toggle" + (s.notify ? " on" : "")} onClick={toggleNotify}>
           <span>Prayer-time reminders</span><b>{s.notify ? "ON" : "OFF"}</b>
         </button>
-        <small className="muted">Reminders work while the app is open or installed on your phone.</small>
+        <small className="muted">Prayer reminders use your calculated local Salah times. Allow notifications when prompted.</small>
+        <div className="azan-settings">
+          <b>Choose which Salah reminders you want</b>
+          <div className="row gap-s wrap">
+            {PRAYERS.map((prayer) => <label className="chip" key={prayer} style={{display:"inline-flex",alignItems:"center",gap:6}}><input type="checkbox" checked={azanPrefs[prayer] !== false} onChange={(e) => setAzanPrefs({ ...azanPrefs, [prayer]: e.target.checked })} />{prayer}</label>)}
+          </div>
+          <button className="chip" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") notifyUser("Amanora test reminder", "Notifications are enabled on this device."); else alert("Turn on Prayer-time reminders first and allow notifications."); }}>Test notification</button>
+          <small className="muted">The notification sound is controlled by your phone/browser. Full Azan audio at an exact time while the browser is completely closed needs a push-notification server and native platform support. This web version schedules reminders while Amanora is running.</small>
+        </div>
         <button className="btn wide" onClick={locate}>{locating ? "Finding location…" : "📍 Update my location"}</button>
         {locErr && <p className="err">{locErr}</p>}
         {installEvt && <button className="btn gold-btn wide" onClick={install}>⬇ Install Amanora on this device</button>}

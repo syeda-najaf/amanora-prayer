@@ -1,0 +1,26 @@
+AMANORA SHORTS + MUSHAF UPDATE
+
+QURAN READER
+- The Quran tab now opens in a 15-line Madani Mushaf page view.
+- All 604 page image URLs follow the repository's numbered image convention.
+- Page navigation, Surah picker, recitation, saved pages, translations and text-study fallback remain available.
+- Zoom controls are included.
+- Page artwork source: https://github.com/akram-seid/quran-hd-images
+- The repository describes the artwork as 15-line Madani Mushaf images generated using the official Quran.com image generator. Review the source repository's reuse terms before commercial distribution.
+- Page artwork is loaded remotely, so an internet connection is required. If an image cannot load, the reader falls back to Quran text.
+
+ISLAMIC SHORTS
+- Shorts is now a primary bottom navigation destination.
+- The feed retains the built-in daily narrated story cards, swipe-up paging, likes, share, speech narration and saved preferences.
+- Users can add their own authorised YouTube or direct MP4 video links.
+- The built-in story cards are animated text/emoji story experiences, not pre-recorded cartoon video files. Do not advertise them as professionally produced video episodes.
+- Only upload or link videos you own or have permission to use. The app does not bundle Abdul Bari or other third-party copyrighted cartoons.
+
+RUN
+npm install
+npm run check
+npm run build
+npm run dev
+
+NOTE
+The build could not be run in this environment because npm dependencies were not available in the local cache and package installation could not complete. Run the commands above on your Windows development machine before deployment.
