@@ -1,6 +1,7 @@
-import { StrictMode } from "react";
+﻿import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { OwnerStudio } from "./components/OwnerStudio";
 import "./styles.css";
 
 // Capture Chrome's install event before React mounts. In production this event
@@ -26,7 +27,7 @@ window.addEventListener("appinstalled", () => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    {window.location.pathname.replace(/\/+$/, "") === "/owner" ? <OwnerStudio /> : <App />}
   </StrictMode>
 );
 
@@ -36,3 +37,4 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
     navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((error) => console.error("Amanora service worker registration failed:", error));
   });
 }
+

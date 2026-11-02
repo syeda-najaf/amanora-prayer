@@ -142,3 +142,10 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(201, 162, 77, 0.6);
 }
+
+/* Amanora shared daily content feed */
+.daily-cloud-list { display: grid; gap: 12px; margin: 14px 0; }
+.daily-cloud-item { display: grid; gap: 7px; padding: 13px; border: 1px solid var(--line, rgba(150,150,150,.2)); border-radius: 14px; }
+.daily-cloud-item p { margin: 0; white-space: pre-wrap; }
+.daily-cloud-item audio, .daily-cloud-item video { width: 100%; max-width: 100%; border-radius: 10px; }
+.daily-cloud-item a { color: var(--gold, #b58b42); font-size: .85rem; }

@@ -1,0 +1,20 @@
+AMANORA DAILY AUTO-PILOT UPDATE
+
+What changed
+- Added a Daily Auto-Pilot screen accessible from the Home screen's daily reflection card.
+- Selects a daily reflection, Hadith, and story using the local calendar date.
+- The daily selection refreshes while the app remains open and automatically changes with the date.
+- Includes browser text-to-speech playback for the selected English story.
+- Provides shortcuts to the existing Quiz, Reels, Bayan, Listen, Stories, and Hadith sections.
+
+Important scope and honesty
+- This is a local, date-based daily rotation using content already bundled in the app. It does not create new religious content or upload/publish new items to all users.
+- Hadith content is drawn from the existing AUTHENTIC_HADITHS collection and displayed with its existing reference. Please have qualified reviewers validate the app's existing religious content before public release.
+- Browser speech synthesis depends on installed device voices and browser support. It is not a professionally recorded recitation.
+- A real cloud auto-publishing system still needs a deployed backend, database, owner authentication, storage, a scheduled job, moderation workflow, and licensed media. Those cannot be made operational by frontend code alone.
+- Real AI presenter video generation may require a paid provider or self-hosted compute. No paid service has been enabled.
+- Existing local browser uploads are not automatically shared with other users.
+
+Verification
+- The uploaded source archive was inspected.
+- A dependency installation attempt timed out in this environment, so TypeScript check and production build could not be run here. Run npm ci, npm run check, and npm run build on the Windows project before deploying.

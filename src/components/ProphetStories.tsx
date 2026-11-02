@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { dayOfYear, useStored } from '../lib';
 
 type Story = {id:string; prophet:string; titleEn:string; titleHi:string; period:string; ref:string; en:string; hi:string; lessonEn:string; lessonHi:string; category:string};
@@ -39,6 +39,18 @@ export function ProphetStories(){
  const [notes,setNotes]=useStored<Record<string,string>>('prophet-story-notes',{});
  const [expanded,setExpanded]=useState<string>('');
  const [audioLanguage,setAudioLanguage]=useState<'en'|'ur'>('en');
+ const [speakingId,setSpeakingId]=useState('');
+ useEffect(()=>()=>{ if ('speechSynthesis' in window) window.speechSynthesis.cancel(); },[]);
+ const speakStory=(s:Story)=>{
+  if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance==='undefined') { window.alert('Audio narration is not supported in this browser. Please try the latest Chrome.'); return; }
+  window.speechSynthesis.cancel();
+  const text=audioLanguage==='en' ? `${s.prophet}. ${s.titleEn}. ${s.en}. Lesson: ${s.lessonEn}. Quran reference: ${s.ref}.` : `${s.prophet}. ${s.titleHi}. ${s.hi}. सीख: ${s.lessonHi}.`;
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang=audioLanguage==='en'?'en-IN':'ur-PK'; utterance.rate=0.94; utterance.pitch=1;
+  utterance.onstart=()=>setSpeakingId(s.id); utterance.onend=()=>setSpeakingId(''); utterance.onerror=()=>setSpeakingId('');
+  window.speechSynthesis.speak(utterance);
+ };
+ const stopStoryAudio=()=>{ if ('speechSynthesis' in window) window.speechSynthesis.cancel(); setSpeakingId(''); };
  const featured=STORIES[(dayOfYear(new Date())-1)%STORIES.length];
  const categories=['All',...Array.from(new Set(STORIES.map(s=>s.category)))];
  const visible=useMemo(()=>STORIES.filter(s=>(filter==='All'||s.category===filter)&&`${s.prophet} ${s.titleEn} ${s.titleHi}`.toLowerCase().includes(query.toLowerCase())),[filter,query]);
@@ -48,7 +60,7 @@ export function ProphetStories(){
    <h4 style={{margin:'8px 0'}}>English</h4><p>{s.en}</p><b>Lesson</b><p>{s.lessonEn}</p>
  </>;
  return <div className="screen">
-  <header className="head"><span className="kicker">QURAN-REFERENCED STORIES</span><h2>Stories of the Prophets ✨</h2><p className="muted">Read concise Quran-referenced stories in English. Urdu human-recorded audio slots are available for each story. Urdu written editions are being prepared separately with accurate translations to follow.</p></header>
+  <header className="head"><span className="kicker">QURAN-REFERENCED STORIES</span><h2>Stories of the Prophets ✨</h2><p className="muted">Listen to Quran-referenced stories in English or Urdu using your device's speech voice. Audio starts inside Amanora, with no external video redirects.</p></header>
   <div className="card" style={{background:'linear-gradient(135deg,#143d32,#245847)',color:'#fff',border:'1px solid #c9a24d'}}>
    <small style={{color:'#f2d58c'}}>TODAY'S PROPHET STORY</small><h3 style={{color:'#fff',marginBottom:4}}>{featured.prophet}</h3><p style={{color:'#f5e7c5'}}>{featured.titleEn}</p><small style={{color:'#e7d6ae'}}>Quran: {featured.ref}</small><div style={{marginTop:12}}><button className="btn gold-btn" onClick={()=>{setExpanded(featured.id);markRead(featured.id);document.getElementById(`prophet-${featured.id}`)?.scrollIntoView({behavior:'smooth',block:'center'});}}>Read today's story ↓</button></div>
   </div>
@@ -60,7 +72,7 @@ export function ProphetStories(){
     <h3>{s.prophet}</h3><b>{s.titleEn}</b>
     {expanded===s.id?content(s):<p className="muted small">{s.en.slice(0,150)}…</p>}
     <div className="row between wrap" style={{marginTop:10}}><small className="muted">Quran: {s.ref}</small><button className="btn" onClick={()=>{setExpanded(v=>v===s.id?'':s.id);markRead(s.id);}}>{expanded===s.id?'Close story':'Read full story →'}</button></div>
-    {expanded===s.id&&<><div className="card" style={{marginTop:14,background:'rgba(201,162,77,.08)'}}><div className="row between wrap"><div><b>🎧 Listen to this story</b><p className="muted small" style={{margin:'4px 0'}}>Human narration slots · English and Urdu</p></div><div className="row gap-s"><button className={'chip'+(audioLanguage==='en'?' on':'')} onClick={()=>setAudioLanguage('en')}>English</button><button className={'chip'+(audioLanguage==='ur'?' on':'')} onClick={()=>setAudioLanguage('ur')}>اردو</button></div></div><audio key={`${s.id}-${audioLanguage}`} controls preload="none" style={{width:'100%',marginTop:10}} src={`/audio/stories/${s.id}-${audioLanguage}.mp3`}>Your browser does not support audio playback.</audio><small className="muted">{audioLanguage==='en'?`Add public/audio/stories/${s.id}-en.mp3 for the English human recording.`:`Add public/audio/stories/${s.id}-ur.mp3 for the Urdu human recording.`} No AI voice or YouTube audio is used.</small></div><div className="row gap-s wrap" style={{marginTop:10}}><button className="chip" onClick={()=>navigator.clipboard?.writeText(storyText(s))}>Copy story</button><button className="chip" onClick={()=>{if(navigator.share)navigator.share({title:s.prophet,text:storyText(s)});else navigator.clipboard?.writeText(storyText(s));}}>Share</button></div><label className="muted small" style={{display:'block',marginTop:14}}>My reflection<textarea className="input" rows={3} value={notes[s.id]||''} onChange={e=>setNotes(v=>({...v,[s.id]:e.target.value}))} placeholder="What lesson do I want to carry into today?" /></label><small className="muted">Private note saved on this device.</small></>}
+    {expanded===s.id&&<><div className="card" style={{marginTop:14,background:'rgba(201,162,77,.08)'}}><div className="row between wrap"><div><b>🎧 Listen to this story</b><p className="muted small" style={{margin:'4px 0'}}>Instant narration · English and Urdu</p></div><div className="row gap-s"><button className={'chip'+(audioLanguage==='en'?' on':'')} onClick={()=>{stopStoryAudio();setAudioLanguage('en');}}>English</button><button className={'chip'+(audioLanguage==='ur'?' on':'')} onClick={()=>{stopStoryAudio();setAudioLanguage('ur');}}>اردو</button></div></div><div className="row gap-s wrap" style={{marginTop:12}}><button className="btn gold-btn" onClick={()=>speakStory(s)} disabled={speakingId===s.id}>▶ {speakingId===s.id?'Playing…':'Play story audio'}</button><button className="chip" onClick={stopStoryAudio}>■ Stop</button></div><small className="muted" style={{display:'block',marginTop:8}}>Uses the English or Urdu voice installed in your device/browser. Voice quality and Urdu availability depend on your device. This is instant text-to-speech, not a human recording.</small></div><div className="row gap-s wrap" style={{marginTop:10}}><button className="chip" onClick={()=>navigator.clipboard?.writeText(storyText(s))}>Copy story</button><button className="chip" onClick={()=>{if(navigator.share)navigator.share({title:s.prophet,text:storyText(s)});else navigator.clipboard?.writeText(storyText(s));}}>Share</button></div><label className="muted small" style={{display:'block',marginTop:14}}>My reflection<textarea className="input" rows={3} value={notes[s.id]||''} onChange={e=>setNotes(v=>({...v,[s.id]:e.target.value}))} placeholder="What lesson do I want to carry into today?" /></label><small className="muted">Private note saved on this device.</small></>}
   </article>)}
   <p className="muted small">These are concise educational summaries, not a substitute for tafsir or scholarly study. References point to Quran passages; details should be checked against reliable tafsir and authentic Seerah sources.</p>
  </div>;

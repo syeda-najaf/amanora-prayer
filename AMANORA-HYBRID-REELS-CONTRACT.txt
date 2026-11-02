@@ -1,0 +1,44 @@
+AMANORA HYBRID REELS FEED
+=========================
+
+This update supports two approved video source types:
+- human: original human-recorded video with documented permission/usage rights
+- ai: AI-generated realistic presenter video, clearly labelled as AI-generated
+
+FRONTEND CONFIGURATION
+----------------------
+Set this in the deployment environment (or local .env file):
+VITE_AMANORA_REELS_FEED_URL=https://YOUR-API-DOMAIN/api/reels
+
+The URL must return JSON in either of these forms:
+
+[{
+  "id": "reel-001",
+  "title": "A daily reminder",
+  "caption": "A short caption shown over the video",
+  "videoUrl": "https://media.example.com/reels/reel-001.mp4",
+  "sourceType": "human",
+  "approved": true,
+  "published": true,
+  "publishedAt": "2026-11-02T08:00:00Z"
+}]
+
+or { "items": [ ...same objects... ] }.
+
+Only entries with approved=true and a valid HTTPS/HTTP videoUrl are shown.
+The public feed refreshes every five minutes. Local uploads remain private to
+this browser and are not treated as published community content.
+
+IMPORTANT LIMITATION
+-------------------
+The frontend is now ready to read an approved shared feed, but this project does
+not yet include the secure media backend, owner moderation dashboard endpoint,
+AI video-generation provider connection, or scheduled publishing worker.
+Those require backend hosting/storage and provider credentials. Do not put secret
+API keys in VITE_ variables because Vite exposes them to browsers. Keep all
+provider keys on the server. Do not publish religious content automatically
+without source review and owner approval.
+
+AI video generation may incur provider charges. Human videos must be original
+or properly licensed. Label AI-generated presenters clearly; do not impersonate
+real scholars or attribute fabricated speech to a named person.

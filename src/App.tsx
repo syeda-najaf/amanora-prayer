@@ -19,6 +19,7 @@ import { Plus } from "./components/Plus";
 import { DailyDua } from "./components/DailyDua";
 import { QuizSection } from "./components/QuizSection";
 import { ProphetStories } from "./components/ProphetStories";
+import { DailyContentFeed } from "./components/DailyContentFeed";
 
 type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Bayan" | "Hadith" | "Worship" | "Quiz" | "Stories";
 
@@ -285,6 +286,7 @@ export default function App() {
         <h2>Explore</h2>
         <p className="muted">A place for remembrance, reflection and discovery.</p>
       </header>
+      <DailyContentFeed />
       <button className="hall" onClick={() => go("Stories")}>
         <span className="hall-icon">📜</span><span className="grow"><b>Prophet Stories · English + Urdu audio</b><small>Quran references, lessons, bookmarks and human-narration audio slots.</small></span><span className="gold">›</span>
       </button>
