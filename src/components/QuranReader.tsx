@@ -174,12 +174,12 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ bookmarks, onToggleBoo
 
           {/* Translation selector */}
           <button
-            onClick={() => setSelectedTranslation(curr => curr === 'en.sahih' ? 'ur.jalandhry' : curr === 'ur.jalandhry' ? 'hi.hindi' : 'en.sahih')}
+            onClick={() => setSelectedTranslation(curr => curr === 'en.sahih' ? 'ur.jalandhry' : 'en.sahih')}
             className="px-3.5 py-2.5 rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200 text-left transition-colors shrink-0"
           >
             <span className="text-[9px] font-bold tracking-widest text-stone-400 uppercase block">Translation</span>
             <span className="text-xs font-bold text-[#173D33]">
-              {selectedTranslation === 'en.sahih' ? 'English (Sahih)' : selectedTranslation === 'ur.jalandhry' ? 'Urdu (Jalandhry)' : 'Hindi'} ↻
+              {selectedTranslation === 'en.sahih' ? 'English (Sahih)' : 'Urdu (Jalandhry)'} ↻
             </span>
           </button>
         </div>

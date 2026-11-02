@@ -36,4 +36,3 @@ export interface Settings {
   notify: boolean;
 }
 
-export interface MyLink { id: string; title: string; url: string }

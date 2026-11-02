@@ -115,5 +115,4 @@ export const RECITERS = [
 export const TRANSLATIONS = [
   { id: "en.sahih", label: "English (Saheeh International)" },
   { id: "ur.jalandhry", label: "Urdu (Jalandhry)" },
-  { id: "hi.hindi", label: "Hindi" },
 ];

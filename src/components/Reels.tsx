@@ -1,156 +1,52 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactElement } from "react";
-import { STORIES, Story } from "../data/content";
-import type { MyLink } from "../types";
-import { dayOfYear, shareText, speak, stopSpeak, useStored, youtubeId } from "../lib";
+import { VideoReelStudio } from "./VideoReelStudio";
+import { useMemo, useState } from 'react';
+import { dayOfYear, shareText, useStored } from '../lib';
 
-function StoryReel({ story, active, isToday }: { story: Story; active: boolean; isToday: boolean }) {
-  const [step, setStep] = useState(0);
-  const [talking, setTalking] = useState(false);
-  const [liked, setLiked] = useStored<boolean>("like-" + story.id, false);
+type Lesson = { id:string; category:string; title:string; titleHi:string; reference:string; en:string; hi:string; practice:string; practiceHi:string };
 
-  useEffect(() => {
-    setStep(0);
-    if (!active) { setTalking(false); return; }
-    const t = setInterval(() => setStep((v) => (v < story.steps.length - 1 ? v + 1 : v)), 2400);
-    return () => clearInterval(t);
-  }, [active, story.steps.length]);
+// Original Amanora editorial explanations. Quran references point readers to the
+// primary text; these summaries are educational reflections, not tafsir or fatwa.
+const LESSONS: Lesson[] = [
+ {id:'mercy',category:'Character',title:'Make mercy part of your strength',titleHi:'रहम को अपनी ताक़त बनाइए',reference:'Quran 21:107 · 3:159',en:'Mercy is not limited to kind feelings. It appears in the way we speak, correct mistakes, treat family members and respond to people who are struggling. The Quran describes the Prophet ﷺ as a mercy and connects gentleness with the way people remain close. A strong Muslim can set boundaries without cruelty and offer correction without humiliation.',hi:'रहम केवल अच्छे जज़्बात का नाम नहीं है। यह हमारी बातचीत, ग़लती सुधारने के तरीके, घरवालों के साथ बर्ताव और मुश्किल में पड़े लोगों की मदद में दिखाई देता है। क़ुरआन नबी ﷺ को रहमत बताता है और नरमी को लोगों के करीब रहने का ज़रिया बताता है। इंसान बिना ज़ुल्म किए अपनी हदें तय कर सकता है और किसी की बेइज़्ज़ती किए बिना उसकी इस्लाह कर सकता है।',practice:'Today, replace one harsh reply with a calm and clear sentence.',practiceHi:'आज एक सख़्त जवाब की जगह नरमी और साफ़गोई से बात कीजिए।'},
+ {id:'salah',category:'Worship',title:'Build your day around Salah',titleHi:'अपने दिन को नमाज़ के इर्द-गिर्द सजाइए',reference:'Quran 2:238 · 29:45',en:'Prayer is not simply another task to squeeze into a crowded schedule. It gives the day regular moments to pause, remember Allah and reset our priorities. If consistency is difficult, prepare before the prayer time arrives: make space, reduce distractions and begin with the next prayer rather than feeling defeated by yesterday.',hi:'नमाज़ कोई ऐसा काम नहीं जिसे बहुत व्यस्त दिन में बस किसी तरह फिट कर दिया जाए। यह दिन में बार-बार रुककर अल्लाह को याद करने और अपनी प्राथमिकताओं को ठीक करने का मौक़ा देती है। अगर पाबंदी मुश्किल हो तो वक़्त आने से पहले तैयारी करें, ध्यान भटकाने वाली चीज़ें कम करें और पिछली कमी से मायूस होने के बजाय अगली नमाज़ से शुरुआत करें।',practice:'Choose one prayer today and prepare five minutes early.',practiceHi:'आज एक नमाज़ चुनिए और पाँच मिनट पहले तैयारी कीजिए।'},
+ {id:'gratitude',category:'Heart',title:'Notice the blessings you overlook',titleHi:'उन नेमतों को पहचानिए जिन्हें आप भूल जाते हैं',reference:'Quran 14:7 · 16:18',en:'Gratitude grows when we notice ordinary gifts: safety, time, clean water, a sincere friend, the ability to learn and the chance to make amends. Gratitude does not deny pain. It helps us recognise what remains good while we work patiently through what is difficult.',hi:'शुक्र तब बढ़ता है जब हम रोज़मर्रा की नेमतों को पहचानते हैं: सुरक्षा, वक़्त, साफ़ पानी, सच्चा दोस्त, सीखने की सलाहियत और अपनी ग़लती सुधारने का मौक़ा। शुक्र का मतलब तकलीफ़ से इनकार करना नहीं है। इसका मतलब है मुश्किल के बीच मौजूद भलाई को भी पहचानना।',practice:'Write down three blessings and one way to use each well.',practiceHi:'तीन नेमतें लिखिए और हर एक का अच्छा इस्तेमाल करने का एक तरीका सोचिए।'},
+ {id:'patience',category:'Heart',title:'Patience is an active choice',titleHi:'सब्र एक अमली चुनाव है',reference:'Quran 2:153 · 3:200',en:'Patience is more than waiting quietly. It can mean continuing a good action, resisting a harmful reaction, seeking help and taking the next responsible step. The Quran repeatedly places patience beside prayer and perseverance, reminding us that trust in Allah and practical effort belong together.',hi:'सब्र का मतलब केवल ख़ामोशी से इंतज़ार करना नहीं है। इसमें नेक काम जारी रखना, ग़लत प्रतिक्रिया से बचना, मदद माँगना और अगला ज़िम्मेदार क़दम उठाना शामिल है। क़ुरआन सब्र को नमाज़ और डटे रहने के साथ याद दिलाता है कि अल्लाह पर भरोसा और अपनी कोशिश साथ-साथ चलते हैं।',practice:'When frustrated, pause, breathe, make dua and choose the next right action.',practiceHi:'परेशानी में रुकिए, साँस लीजिए, दुआ कीजिए और सही अगला क़दम चुनिए।'},
+ {id:'parents',category:'Family',title:'Care for parents with dignity',titleHi:'वालिदैन के साथ इज़्ज़त और एहसान से पेश आइए',reference:'Quran 17:23–24 · 31:14–15',en:'The Quran places kindness to parents alongside worship of Allah. Kindness includes respectful speech, practical care and sincere prayer. Where a parent asks for something contrary to faith or harmful, the Quran also teaches that obedience has limits while companionship should remain honourable. Seek wise help when family situations are difficult.',hi:'क़ुरआन अल्लाह की इबादत के साथ वालिदैन के साथ एहसान का हुक्म देता है। इसमें अदब से बात करना, ज़रूरत में मदद करना और उनके लिए दुआ करना शामिल है। अगर कोई बात दीन के ख़िलाफ़ या नुक़सानदेह हो तो इताअत की हद भी है, लेकिन बर्ताव इज़्ज़त वाला रहना चाहिए। मुश्किल पारिवारिक हालात में समझदार और भरोसेमंद मदद लें।',practice:'Call, message or help your parents with one specific task today.',practiceHi:'आज वालिदैन को फ़ोन या पैग़ाम कीजिए या उनका एक काम करके दीजिए।'},
+ {id:'honesty',category:'Character',title:'Let honesty shape private and public life',titleHi:'तन्हाई और लोगों के सामने, दोनों जगह सच्चाई अपनाइए',reference:'Quran 9:119 · 33:70',en:'Truthfulness is not only avoiding obvious lies. It also means accurate promises, fair measurements, honest work, clear business dealings and admitting when we do not know. A trustworthy person does not decorate uncertainty as fact. They check, correct and give people their due.',hi:'सच्चाई केवल साफ़ झूठ से बचने का नाम नहीं है। इसमें वादा पूरा करना, सही नाप-तौल, ईमानदार काम, साफ़ कारोबारी लेन-देन और न जानने पर मान लेना भी शामिल है। अमानतदार इंसान शक को यक़ीन बनाकर पेश नहीं करता। वह जाँचता है, सुधारता है और लोगों का हक़ अदा करता है।',practice:'Correct one mistake openly instead of hiding it.',practiceHi:'आज अपनी एक ग़लती छिपाने के बजाय उसे साफ़ तौर पर सुधारिए।'},
+ {id:'charity',category:'Community',title:'Give in ways that protect dignity',titleHi:'ऐसी मदद कीजिए जो इंसान की इज़्ज़त बचाए',reference:'Quran 2:261 · 2:263 · 76:8–9',en:'Giving is not measured only by amount. Time, useful skills, food, a quiet act of service and sincere encouragement can all help. The Quran warns against damaging charity through reminders or hurtful words. Give privately when possible, respect the recipient and never turn someone’s need into a performance.',hi:'मदद की क़ीमत केवल रकम से तय नहीं होती। वक़्त, काम की सलाहियत, खाना, ख़ामोशी से की गई ख़िदमत और हौसला देना भी मदद है। क़ुरआन एहसान जताने और तकलीफ़देह बातों से सदक़े को ख़राब करने से रोकता है। जहाँ मुमकिन हो, ख़ामोशी से मदद करें और ज़रूरतमंद की इज़्ज़त का ख़याल रखें।',practice:'Offer one useful act of help without posting about it.',practiceHi:'आज एक मदद बिना उसका दिखावा किए कीजिए।'},
+ {id:'knowledge',category:'Learning',title:'Learn with humility and verification',titleHi:'तवाज़ो और तहक़ीक़ के साथ इल्म हासिल कीजिए',reference:'Quran 17:36 · 20:114 · 39:9',en:'Religious learning deserves care. Distinguish a Quran verse from a translation, a hadith from a later explanation, and a scholarly ruling from a personal reflection. Check references, ask qualified teachers about difficult matters and be comfortable saying “I need to verify that.” More information is not always better understanding.',hi:'दीन का इल्म एहतियात के साथ हासिल करना चाहिए। आयत और उसके तर्जुमे, हदीस और बाद की व्याख्या, आलिम के फ़तवे और अपनी निजी राय में फ़र्क़ समझिए। हवाले जाँचिए, मुश्किल मसलों में योग्य उस्ताद से पूछिए और यह कहने में हिचकिचाइए नहीं कि “मुझे इसकी तहक़ीक़ करनी है।” ज़्यादा जानकारी हमेशा बेहतर समझ नहीं होती।',practice:'Verify the source of one Islamic quote before sharing it.',practiceHi:'आज किसी एक इस्लामी बात को शेयर करने से पहले उसका असल हवाला जाँचिए।'},
+ {id:'repentance',category:'Heart',title:'Return after a mistake',titleHi:'ग़लती के बाद अल्लाह की तरफ़ लौटिए',reference:'Quran 39:53 · 3:135',en:'A mistake should lead to responsibility, not despair. Sincere repentance includes stopping the wrong, feeling remorse, resolving not to return and restoring another person’s right when it has been violated. If the same struggle returns, renew repentance and seek practical support rather than giving up.',hi:'ग़लती के बाद ज़िम्मेदारी लेनी चाहिए, मायूस नहीं होना चाहिए। सच्ची तौबा में ग़लत काम छोड़ना, दिल से पछताना, दोबारा न करने का इरादा करना और किसी का हक़ मारा हो तो उसे लौटाना शामिल है। अगर वही कमज़ोरी फिर सामने आए तो तौबा दोहराएँ और मदद लें, हार न मानें।',practice:'Make a sincere istighfar and repair one harm you caused, if possible.',practiceHi:'सच्चे दिल से इस्तिग़फ़ार कीजिए और मुमकिन हो तो अपनी वजह से हुआ एक नुक़सान ठीक कीजिए।'},
+ {id:'speech',category:'Character',title:'Make your words safe for others',titleHi:'अपनी ज़बान को दूसरों के लिए महफ़ूज़ बनाइए',reference:'Quran 49:11–12 · 17:53',en:'Speech can protect relationships or quietly damage them. Avoid mockery, suspicion, backbiting and spreading claims without checking. Before forwarding a message, ask whether it is true, useful and fair to the person being discussed. Silence can be an act of wisdom when words would only cause harm.',hi:'बातचीत रिश्तों की हिफ़ाज़त भी कर सकती है और उन्हें नुक़सान भी पहुँचा सकती है। मज़ाक उड़ाने, बदगुमानी, ग़ीबत और बिना जाँच के ख़बर फैलाने से बचिए। कोई पैग़ाम आगे भेजने से पहले सोचिए कि क्या वह सही, फ़ायदेमंद और संबंधित इंसान के साथ इंसाफ़ वाला है। जब बात से केवल नुक़सान हो तो ख़ामोशी भी हिकमत है।',practice:'Do not forward one unverified message today.',practiceHi:'आज बिना जाँचे किसी एक पैग़ाम को आगे न भेजिए।'},
+ {id:'balance',category:'Life',title:'Choose a balanced, responsible life',titleHi:'मुतवाज़िन और ज़िम्मेदार ज़िंदगी चुनिए',reference:'Quran 28:77 · 7:31',en:'Faith shapes how we use the world, not only how we worship. Caring for health, earning honestly, fulfilling family responsibilities, resting and serving others can all become meaningful when done with sound intention and within ethical limits. Avoid excess, neglect and comparisons that steal contentment.',hi:'ईमान केवल इबादत के तरीक़े को नहीं, दुनिया में हमारे इस्तेमाल को भी बेहतर बनाता है। सेहत का ख़याल, हलाल रोज़ी, घर की ज़िम्मेदारियाँ, आराम और लोगों की ख़िदमत सही नीयत और जायज़ हदों में हों तो नेक अमल बन सकते हैं। फ़िज़ूलखर्ची, लापरवाही और ऐसी तुलना से बचिए जो दिल का सुकून छीन ले।',practice:'Choose one neglected responsibility and give it focused time.',practiceHi:'आज अपनी एक छोड़ी हुई ज़िम्मेदारी को पूरा करने के लिए वक़्त निकालिए।'},
+ {id:'neighbor',category:'Community',title:'Make your neighbourhood better',titleHi:'अपने आस-पास की दुनिया को बेहतर बनाइए',reference:'Quran 4:36 · 107:1–7',en:'Good character reaches beyond the people we already like. Neighbours, travellers, people in need and those with little influence deserve consideration. Community care can be practical: keeping shared spaces clean, checking on someone, preventing harm and treating service workers respectfully.',hi:'अच्छा अख़लाक़ केवल उन लोगों तक सीमित नहीं होना चाहिए जिन्हें हम पहले से पसंद करते हैं। पड़ोसी, मुसाफ़िर, ज़रूरतमंद और कमज़ोर स्थिति वाले लोग भी हमारे अच्छे बर्ताव के हक़दार हैं। मोहल्ले की ख़िदमत अमली हो सकती है: साझा जगह साफ़ रखना, किसी का हाल पूछना, नुक़सान रोकना और काम करने वालों से इज़्ज़त से पेश आना।',practice:'Do one small thing that improves a shared space.',practiceHi:'आज ऐसी एक छोटी कोशिश कीजिए जिससे साझा जगह बेहतर हो।'},
+];
 
-  useEffect(() => { if (!active) { stopSpeak(); setTalking(false); } }, [active]);
+export function Reels(){
+ const [filter,setFilter]=useState('For you');
+ const [query,setQuery]=useState('');
 
-  const emoji = story.emoji[Math.min(step, story.emoji.length - 1)];
-  const toggleVoice = () => {
-    if (talking) { stopSpeak(); setTalking(false); return; }
-    setTalking(true);
-    speak(story.narration, "en-US", () => setTalking(false));
-  };
-  const share = () => shareText(story.title, `${story.lesson} (${story.reference})`);
-
-  return (
-    <section className="reel" data-active={active}>
-      <div className="reel-top">
-        <span className="reel-tag">{isToday ? "NEW TODAY · " : ""}{story.tag}</span>
-      </div>
-
-      <div className="board">
-        <div className="board-emoji" key={step}>{emoji}</div>
-        <h3>{story.title}</h3>
-        <ol className="board-steps">
-          {story.steps.slice(0, step + 1).map((line, i) => (
-            <li key={i} className={i === step ? "now" : ""}>{line}</li>
-          ))}
-        </ol>
-      </div>
-
-      <div className="rail">
-        <button onClick={() => setLiked(!liked)}><span>{liked ? "❤️" : "🤍"}</span><small>Like</small></button>
-        <button onClick={share}><span>↗️</span><small>Share</small></button>
-      </div>
-
-      <div className="reel-bottom">
-        <small className="gold">DAILY GOOD THING</small>
-        <p className="reel-lesson">{story.lesson}</p>
-        <small className="soft">{story.reference}</small>
-        <button className="btn gold-btn wide" onClick={toggleVoice}>{talking ? "■ Stop story" : "▶ Listen to story"}</button>
-      </div>
-    </section>
-  );
-}
-
-function LinkReel({ item, active, onRemove }: { item: MyLink; active: boolean; onRemove: () => void }) {
-  const ref = useRef<HTMLVideoElement | null>(null);
-  const yt = youtubeId(item.url);
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    if (active) v.play().catch(() => {}); else v.pause();
-  }, [active]);
-  return (
-    <section className="reel" data-active={active}>
-      <div className="reel-top">
-        <span className="reel-tag">MY VIDEO</span>
-        <button className="chip" onClick={onRemove}>Remove</button>
-      </div>
-      <div className="video-box">
-        {yt ? (
-          active ? <iframe title={item.title} src={`https://www.youtube-nocookie.com/embed/${yt}?playsinline=1&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
-                 : <div className="center muted">Scroll here to play</div>
-        ) : (
-          <video ref={ref} src={item.url} controls loop playsInline muted />
-        )}
-      </div>
-      <div className="reel-bottom">
-        <p className="reel-lesson">{item.title}</p>
-      </div>
-    </section>
-  );
-}
-
-export function Reels() {
-  const [links, setLinks] = useStored<MyLink[]>("my-reels", []);
-  const [adding, setAdding] = useState(false);
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
-  const [err, setErr] = useState("");
-  const [idx, setIdx] = useState(0);
-  const feed = useRef<HTMLDivElement | null>(null);
-
-  const stories = useMemo(() => {
-    const k = dayOfYear() % STORIES.length;
-    return [...STORIES.slice(k), ...STORIES.slice(0, k)];
-  }, []);
-
-  // Which reel is on screen?
-  useEffect(() => {
-    const root = feed.current;
-    if (!root) return;
-    const io = new IntersectionObserver(
-      (es) => es.forEach((e) => { if (e.isIntersecting && e.intersectionRatio > 0.6) setIdx(Number((e.target as HTMLElement).dataset.i)); }),
-      { root, threshold: 0.6 }
-    );
-    root.querySelectorAll("[data-i]").forEach((n) => io.observe(n));
-    return () => io.disconnect();
-  }, [links.length]);
-
-  useEffect(() => () => stopSpeak(), []);
-
-  const add = () => {
-    const u = url.trim();
-    if (!/^https?:\/\//i.test(u)) { setErr("Paste a full link that starts with https://"); return; }
-    setLinks([{ id: "v" + Date.now(), title: title.trim() || "My video", url: u }, ...links]);
-    setTitle(""); setUrl(""); setErr(""); setAdding(false);
-  };
-
-  const items: { key: string; node: (active: boolean) => ReactElement }[] = [
-    ...links.map((l) => ({ key: l.id, node: (a: boolean) => <LinkReel item={l} active={a} onRemove={() => setLinks(links.filter((x) => x.id !== l.id))} /> })),
-    ...stories.map((s, i) => ({ key: "s" + s.id, node: (a: boolean) => <StoryReel story={s} active={a} isToday={i === 0} /> })),
-  ];
-
-  return (
-    <div className="reels-screen">
-      <div className="reels-head">
-        <div>
-          <b>DEEN REELS</b>
-          <small>A new story every day · swipe up ↑</small>
-        </div>
-        <button className="chip on" onClick={() => setAdding(!adding)}>＋ Add video</button>
-      </div>
-
-      {adding && (
-        <div className="reels-add">
-          <input className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <input className="input" placeholder="YouTube link or direct .mp4 link" value={url} onChange={(e) => setUrl(e.target.value)} autoCapitalize="none" />
-          {err && <p className="err">{err}</p>}
-          <button className="btn wide" onClick={add}>Add to my reels</button>
-          <small className="soft">Only add videos you have the right to use. They are saved on this device.</small>
-        </div>
-      )}
-
-      <div className="reels-feed" ref={feed}>
-        {items.map((it, i) => (
-          <div key={it.key} data-i={i} className="reel-slot">{it.node(i === idx)}</div>
-        ))}
-      </div>
-    </div>
-  );
+ const [saved,setSaved]=useStored<string[]>('saved-original-lessons',[]);
+ const [opened,setOpened]=useState<string>('');
+ const todays=useMemo(()=>{const start=(dayOfYear(new Date())-1)%LESSONS.length;return [...LESSONS.slice(start),...LESSONS.slice(0,start)];},[]);
+ const source=filter==='For you'?todays:LESSONS.filter(x=>x.category===filter);
+ const shown=source.filter(x=>`${x.title} ${x.reference} ${x.en}`.toLowerCase().includes(query.toLowerCase()));
+ const categories=['For you',...Array.from(new Set(LESSONS.map(x=>x.category))),'Saved'];
+ const items=filter==='Saved'?LESSONS.filter(x=>saved.includes(x.id)):shown;
+ return <div className="screen">
+  <header className="head"><span className="kicker">AMANORA ORIGINAL LIBRARY</span><h2>Reels & Daily Reflections</h2><p className="muted">Amanora learning cards alongside a real vertical video feed. Videos play inside the app.</p></header>
+  <VideoReelStudio />
+  <div className="row gap-s wrap" style={{marginBottom:12}}>{categories.map(c=><button key={c} className={'chip'+(filter===c?' on':'')} onClick={()=>setFilter(c)}>{c}</button>)}</div>
+  <div className="row gap-s"><input className="input" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search reflections"/></div>
+  <div className="card" style={{marginTop:14}}><small className="gold">EDITORIAL NOTE</small><p className="muted small">These are Amanora-authored educational reflections, not quotations, formal tafsir or fatwas. Verse references are provided so readers can consult the Quran and qualified scholarship directly.</p></div>
+  {items.map((x,i)=><article className="card" key={x.id} style={{marginTop:12}}>
+   <div className="row between"><span className="pill">{x.category}</span><small className="muted">{i===0&&filter==='For you'?'Today’s reading':`Reading ${i+1}`}</small></div>
+   <h3>{x.title}</h3><small className="gold">{x.reference}</small>
+   <p>{x.en}</p>
+   <div className="dua-translation"><b>Try this today</b><p>{x.practice}</p></div>
+   <div className="row gap-s wrap" style={{marginTop:12}}><button className="chip" onClick={()=>setSaved(v=>v.includes(x.id)?v.filter(y=>y!==x.id):[...v,x.id])}>{saved.includes(x.id)?'★ Saved':'☆ Save'}</button><button className="chip" onClick={()=>shareText(x.title,`${x.en}\n\n${x.reference}\n\n${x.practice}`)}>Share</button><button className="chip" onClick={()=>setOpened(opened===x.id?'':x.id)}>{opened===x.id?'Hide':'Reflection prompt'}</button></div>
+   {opened===x.id&&<p className="muted small">What is one change you can make this week based on this reading? Write a private note in your journal or discuss it with a trusted teacher.</p>}
+  </article>)}
+  {items.length===0&&<p className="muted center">No readings found. Try another search or category.</p>}
+  <p className="note">Content policy: Amanora explanations are original educational writing. Quran translations and Hadith wording must retain their credited translators, collections and references; disputed matters should be reviewed by qualified scholars before publication.</p>
+ </div>
 }

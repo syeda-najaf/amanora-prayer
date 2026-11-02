@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { MyLink } from "../types";
-import { getSurahs, useStored, youtubeId } from "../lib";
+import { getSurahs } from "../lib";
 import type { Surah } from "../types";
 
 interface Radio { id: number; name: string; url: string }
@@ -22,11 +21,6 @@ export function Listen() {
   const [rec, setRec] = useState<Reciter | null>(null);
   const [surahs, setSurahs] = useState<Surah[]>([]);
 
-  // my links
-  const [links, setLinks] = useStored<MyLink[]>("my-bayans", []);
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
-  const [yt, setYt] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("https://www.mp3quran.net/api/v3/radios?language=eng").then((r) => r.json())
@@ -50,12 +44,7 @@ export function Listen() {
     a.play().then(() => { setPlayingKey(key); setNow(label); setStatus(""); }).catch(() => { setStatus("Tap again to start audio."); });
   };
 
-  const addLink = () => {
-    const u = url.trim();
-    if (!/^https?:\/\//i.test(u)) { setStatus("Paste a full link that starts with https://"); return; }
-    setLinks([{ id: "b" + Date.now(), title: title.trim() || "My bayan", url: u }, ...links]);
-    setTitle(""); setUrl(""); setStatus("");
-  };
+
 
   const filtered = reciters.filter((r) => r.name.toLowerCase().includes(rq.toLowerCase())).slice(0, 25);
   const moshaf = rec?.moshaf?.[0];
@@ -66,7 +55,7 @@ export function Listen() {
       <header className="head">
         <span className="kicker">LISTEN AND LEARN</span>
         <h2>Listen</h2>
-        <p className="muted">Live Quran radio, full-surah recitations and your own bayans.</p>
+        <p className="muted">Quran radio and full-surah recitations from listed human reciters.</p>
       </header>
 
       {now && (
@@ -130,28 +119,8 @@ export function Listen() {
       </div>
 
       <div className="card">
-        <h3>🎙️ My bayans & lectures</h3>
-        <p className="muted small">Paste a link to an audio (.mp3) or a YouTube video that you have the right to use. It is saved on this device.</p>
-        <input className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input className="input" placeholder="https://… (.mp3 or YouTube link)" value={url} onChange={(e) => setUrl(e.target.value)} autoCapitalize="none" />
-        <button className="btn wide" onClick={addLink}>Add</button>
-        <div className="list">
-          {links.map((l) => {
-            const id = youtubeId(l.url);
-            return (
-              <div key={l.id} className="list-row">
-                <button className={"round " + (playingKey === l.id || yt === id && id ? "on" : "")}
-                  onClick={() => id ? (audio.current?.pause(), setPlayingKey(""), setYt(yt === id ? null : id)) : play(l.id, l.url, l.title)}>
-                  {playingKey === l.id || (id && yt === id) ? "■" : "▶"}
-                </button>
-                <span className="grow"><b>{l.title}</b><small>{id ? "YouTube" : "Audio"}</small></span>
-                <button className="chip" onClick={() => { setLinks(links.filter((x) => x.id !== l.id)); if (playingKey === l.id) { audio.current?.pause(); setPlayingKey(""); } }}>Remove</button>
-              </div>
-            );
-          })}
-          {links.length === 0 && <p className="muted small">Nothing added yet.</p>}
-        </div>
-        {yt && <div className="yt"><iframe title="video" src={`https://www.youtube-nocookie.com/embed/${yt}?playsinline=1&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /></div>}
+        <h3>📚 Amanora reading library</h3>
+        <p className="muted small">Prefer written learning? Open Read & Reflect for original English reflections with Quran references, practical exercises and saved readings. No third-party video or lecture links are used in Amanora.</p>
       </div>
     </div>
   );

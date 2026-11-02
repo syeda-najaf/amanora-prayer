@@ -20,18 +20,11 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export const dateKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const dayOfYear = (d = new Date()) => Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
 
-/* ---------- voice (device text-to-speech) ---------- */
-export function speak(text: string, lang = "en-US", onEnd?: () => void) {
-  if (!("speechSynthesis" in window)) { onEnd?.(); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang;
-  u.rate = 0.9;
-  u.onend = () => onEnd?.();
-  u.onerror = () => onEnd?.();
-  speechSynthesis.speak(u);
-}
-export const stopSpeak = () => { try { speechSynthesis.cancel(); } catch { /* ignore */ } };
+/* ---------- audio policy ---------- */
+// Amanora does not generate synthetic narration or use browser text-to-speech.
+// Quran audio, where offered, must come from an identified human reciter/source.
+export function speak(_text: string, _lang = "en-US", onEnd?: () => void) { onEnd?.(); }
+export const stopSpeak = () => {};
 
 /* ---------- location ---------- */
 export function getPosition(): Promise<{ lat: number; lon: number }> {
@@ -108,11 +101,6 @@ export function getSurahs(): Promise<Surah[]> {
   return surahPromise;
 }
 
-/* ---------- links ---------- */
-export function youtubeId(url: string): string | null {
-  const m = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
-  return m ? m[1] : null;
-}
 export async function shareText(title: string, text: string) {
   try {
     if (navigator.share) { await navigator.share({ title, text }); return "shared"; }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ADHKAR, DHIKR } from "../data/content";
 import type { Coords } from "../types";
-import { qiblaBearing, speak, stopSpeak, useStored } from "../lib";
+import { qiblaBearing, useStored } from "../lib";
 
 function Qibla({ coords }: { coords: Coords | null }) {
   const [heading, setHeading] = useState<number | null>(null);
@@ -64,8 +64,6 @@ export function Worship({ coords }: { coords: Coords | null }) {
   const [count, setCount] = useStored<number>("tasbih", 0);
   const [total, setTotal] = useStored<number>("tasbih-total", 0);
   const [di, setDi] = useState(0);
-  const [talking, setTalking] = useState<number | null>(null);
-  useEffect(() => () => stopSpeak(), []);
 
   const tap = () => {
     setCount(count + 1); setTotal(total + 1);
@@ -105,10 +103,7 @@ export function Worship({ coords }: { coords: Coords | null }) {
               <p className="muted small">{a.en}</p>
               <small className="gold">{a.note}</small>
             </div>
-            <button className={"round " + (talking === i ? "on" : "")} onClick={() => {
-              if (talking === i) { stopSpeak(); setTalking(null); return; }
-              setTalking(i); speak(a.ar, "ar-SA", () => setTalking(null));
-            }}>{talking === i ? "■" : "▶"}</button>
+
           </div>
         ))}
       </div>

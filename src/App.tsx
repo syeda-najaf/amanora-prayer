@@ -11,12 +11,16 @@ import { Gate } from "./components/Gate";
 import { Quran } from "./components/Quran";
 import { Reels } from "./components/Reels";
 import { Listen } from "./components/Listen";
+import { BayanLibrary } from "./components/BayanLibrary";
 import { Hadith } from "./components/Hadith";
 import { Worship } from "./components/Worship";
 import { Learn } from "./components/Learn";
 import { Plus } from "./components/Plus";
+import { DailyDua } from "./components/DailyDua";
+import { QuizSection } from "./components/QuizSection";
+import { ProphetStories } from "./components/ProphetStories";
 
-type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Hadith" | "Worship";
+type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Bayan" | "Hadith" | "Worship" | "Quiz" | "Stories";
 
 const DEFAULTS: Settings = { name: "", method: 3, reciter: "ar.alafasy", translation: "en.sahih", notify: false };
 
@@ -40,6 +44,9 @@ function notifyUser(title: string, body: string) {
 export default function App() {
   const [gate, setGate] = useState(() => !sessionStorage.getItem("amanora:entered"));
   const [tab, setTab] = useState<Tab>("Home");
+  const [language, setLanguage] = useStored<"en" | "ur">("language", "en");
+  const isUrdu = language === "ur";
+  useEffect(() => { document.documentElement.lang = isUrdu ? "ur" : "en"; document.documentElement.dir = isUrdu ? "rtl" : "ltr"; }, [isUrdu]);
   const [settings, setSettings] = useStored<Settings>("settings", DEFAULTS);
   const [coords, setCoords] = useStored<Coords | null>("coords", null);
   const [log, setLog] = useStored<Record<string, string[]>>("prayer-log", {});
@@ -48,7 +55,7 @@ export default function App() {
   const [homeFeedback, setHomeFeedback] = useStored<"yes" | "no" | null>("feedback-home", null);
   const [oled, setOled] = useStored<boolean>("oled-theme", false);
   const [paymentPlan, setPaymentPlan] = useState<"monthly" | "yearly">("monthly");
-  const [homeWidgets, setHomeWidgets] = useStored<string[]>("home-widgets", ["Quran", "Reels", "Listen", "Hadith", "Worship", "Learn"]);
+  const [homeWidgets, setHomeWidgets] = useStored<string[]>("home-widgets", ["Quran", "Stories", "Reels", "Listen", "Hadith", "Worship", "Learn", "Quiz"]);
 
   const [azanPrefs, setAzanPrefs] = useStored<Record<string, boolean>>("azan-prayer-prefs", { Fajr: true, Dhuhr: true, Asr: true, Maghrib: true, Isha: true });
   const [times, setTimes] = useState<PrayerTime[]>([]);
@@ -179,29 +186,30 @@ export default function App() {
 
   /* ---------------- screens ---------------- */
   const home = (
-    <div className="screen">
-      <div className="row between">
+    <div className="screen amanora-home">
+      <div className="row between home-topline">
         <div>
-          <h2 className="hello">Assalamu Alaikum{s.name ? `, ${s.name}` : ""} 🌙</h2>
-          <p className="muted small">{[coords?.city, hijri].filter(Boolean).join(" · ") || "Welcome to your sanctuary"}</p>
+          <span className="kicker">AMANORA · YOUR WORLD OF DEEN</span>
+          <h2 className="hello">{isUrdu ? `السلام علیکم${s.name ? `، ${s.name}` : ""}` : `Assalamu Alaikum${s.name ? `, ${s.name}` : ""}`} 🌙</h2>
+          <p className="muted small">{[coords?.city, hijri].filter(Boolean).join(" · ") || (isUrdu ? "آپ کے ایمان اور روزمرہ زندگی کا ساتھی" : "Your companion for faith and everyday life")}</p>
         </div>
-        <button className="avatar" onClick={() => go("Profile")} aria-label="Settings">☾</button>
+        <div className="home-actions"><button className="language-switch" onClick={() => setLanguage(isUrdu ? "en" : "ur")} aria-label="Change language">{isUrdu ? "English" : "اردو"}</button><button className="avatar" onClick={() => go("Profile")} aria-label="Settings">☾</button></div>
       </div>
 
       <div className="hero-card">
-        <small>NEXT PRAYER</small>
+        <small>{isUrdu ? "اگلی نماز" : "NEXT PRAYER"}</small>
         {next ? (
           <div className="row between">
             <div>
               <div className="hero-name">{next.label}</div>
               <div className="hero-time">{fmtTime(next.date)}</div>
             </div>
-            <div className="ring"><b>{fmtCountdown(next.date, now)}</b><small>LEFT</small></div>
+            <div className="ring"><b>{fmtCountdown(next.date, now)}</b><small>{isUrdu ? "باقی" : "LEFT"}</small></div>
           </div>
         ) : (
           <div>
             <div className="hero-name">Prayer times</div>
-            <p className="hero-time">{coords ? (timesErr || "Loading…") : "Allow location to see live prayer times for your city."}</p>
+            <p className="hero-time">{coords ? (timesErr || "Loading…") : (isUrdu ? "نماز کے اوقات دیکھنے کے لیے مقام کی اجازت دیں۔" : "Allow location to see live prayer times for your city.")}</p>
           </div>
         )}
         <button className="hero-btn" onClick={locate} disabled={locating}>
@@ -211,21 +219,21 @@ export default function App() {
       </div>
 
       <button className="daily" onClick={() => go("Reels")}>
-        <small className="gold">✨ TODAY'S GOOD THING</small>
+        <small className="gold">✨ TODAY'S REFLECTION</small>
         <p>{good.text}</p>
-        <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Watch today's cartoon ▶</b></span>
+        <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Read today's reflection →</b></span>
       </button>
 
       <div className="grid">
         {([
-          ["Quran", "📖"], ["Reels", "🎬"], ["Listen", "🎧"], ["Hadith", "🕌"], ["Worship", "📿"], ["Learn", "🎓"],
+          ["Quran", "📖"], ["Stories", "📜"], ["Reels", "📚"], ["Listen", "🎧"], ["Hadith", "🕌"], ["Worship", "📿"], ["Learn", "🎓"], ["Quiz", "🧠"],
         ] as [Tab, string][]).filter(([t]) => homeWidgets.includes(t)).map(([t, i]) => (
-          <button key={t} className="tile" onClick={() => go(t)}><span className="tile-ic">{i}</span>{t}</button>
+          <button key={t} className="tile" onClick={() => go(t)}><span className="tile-ic">{i}</span>{t === "Reels" ? "Read & Reflect" : t}</button>
         ))}
       </div>
 
       <div className="card">
-        <div className="row between"><h3>Today's prayers</h3><span className="pill">{doneToday.length}/5</span></div>
+        <div className="row between"><h3>{isUrdu ? "آج کی نمازیں" : "Today's prayers"}</h3><span className="pill">{doneToday.length}/5</span></div>
         {PRAYERS.map((p) => {
           const t = times.find((x) => x.name === p);
           const on = doneToday.includes(p);
@@ -238,12 +246,12 @@ export default function App() {
           );
         })}
         <div className="progress"><div style={{ width: `${doneToday.length * 20}%` }} /></div>
-        <div className="row between"><small className="muted">🔥 Streak: {streak} day{streak === 1 ? "" : "s"}</small><small className="muted">{totalPrayers} prayers logged</small></div>
+        <div className="row between"><small className="muted">🔥 {isUrdu ? `مسلسل ${streak} دن` : `Streak: ${streak} day${streak === 1 ? "" : "s"}`}</small><small className="muted">{totalPrayers} prayers logged</small></div>
       </div>
 
       <button className="card continue" onClick={() => go("Quran")}>
         <span className="tile-ic">📖</span>
-        <span className="grow"><b>Continue reading</b><small>Quran · page {quranPage}</small></span>
+        <span className="grow"><b>{isUrdu ? "قرآن پڑھنا جاری رکھیں" : "Continue reading"}</b><small>Quran · page {quranPage}</small></span>
         <span className="gold">›</span>
       </button>
 
@@ -260,10 +268,12 @@ export default function App() {
         <small className="muted">Your answer is saved only on this device.</small>
       </div>
 
+      <DailyDua />
+
       <div className="card">
         <small className="gold">HADITH OF THE DAY</small>
         <p className="hadith-en">{hadith.meaning}</p>
-        <div className="row between"><small className="muted">{hadith.reference}</small><button className="chip" onClick={() => go("Hadith")}>More hadith ›</button></div>
+        <div className="row between"><small className="muted">{hadith.reference}</small><button className="chip" onClick={() => go("Hadith")}>Open Hadith Library ›</button></div>
       </div>
     </div>
   );
@@ -275,11 +285,17 @@ export default function App() {
         <h2>Explore</h2>
         <p className="muted">A place for remembrance, reflection and discovery.</p>
       </header>
+      <button className="hall" onClick={() => go("Stories")}>
+        <span className="hall-icon">📜</span><span className="grow"><b>Prophet Stories · English + Urdu audio</b><small>Quran references, lessons, bookmarks and human-narration audio slots.</small></span><span className="gold">›</span>
+      </button>
       <button className="hall" onClick={() => go("Reels")}>
-        <span className="hall-icon">🎬</span><span className="grow"><b>Islamic Shorts & Stories</b><small>Short reminders and daily moral stories</small></span><span className="gold">›</span>
+        <span className="hall-icon">📚</span><span className="grow"><b>Read & Reflect</b><small>Original English reflections with Quran references, reflection prompts and saved readings. Urdu editions are being prepared with careful review.</small></span><span className="gold">›</span>
       </button>
       <button className="hall" onClick={() => go("Listen")}>
-        <span className="hall-icon">🎧</span><span className="grow"><b>Quran Audio & Bayans</b><small>Reciters, radio and your saved listening links</small></span><span className="gold">›</span>
+        <span className="hall-icon">🎧</span><span className="grow"><b>Quran Recitations</b><small>Human reciters and Quran radio streams</small></span><span className="gold">›</span>
+      </button>
+      <button className="hall bayan-hall" onClick={() => go("Bayan")}>
+        <span className="hall-icon">🎙️</span><span className="grow"><b>Full Bayan Audio Library</b><small>Long-form talks, Mufti Menk audio, favourites, playlists and Urdu collection</small></span><span className="gold">›</span>
       </button>
       <button className="hall" onClick={() => go("Hadith")}>
         <span className="hall-icon">📜</span><span className="grow"><b>Hadith Library</b><small>Browse narrations, meanings and references</small></span><span className="gold">›</span>
@@ -287,6 +303,7 @@ export default function App() {
       <button className="hall" onClick={() => go("Worship")}>
         <span className="hall-icon">🧭</span><span className="grow"><b>Worship & Qibla</b><small>Adhkar, tasbih and direction to the Kaaba</small></span><span className="gold">›</span>
       </button>
+      <button className="hall" onClick={() => go("Quiz")}><span className="hall-icon">🧠</span><span className="grow"><b>Daily Deen Quiz</b><small>Fresh daily questions, explanations and score tracking</small></span><span className="gold">›</span></button>
       <button className="hall" onClick={() => go("Learn")}>
         <span className="hall-icon">🎓</span><span className="grow"><b>Islamic Learning</b><small>Continue your learning paths and lessons</small></span><span className="gold">›</span>
       </button>
@@ -314,6 +331,7 @@ export default function App() {
 
       <div className="card">
         <h3>Settings</h3>
+        <div className="row between"><span><b>App language</b><small className="muted" style={{display:"block"}}>English / اردو</small></span><button className="chip on" onClick={() => setLanguage(isUrdu ? "en" : "ur")}>{isUrdu ? "Switch to English" : "اردو منتخب کریں"}</button></div>
         <label>Your name<input className="input" value={s.name} onChange={(e) => setSettings({ ...s, name: e.target.value })} placeholder="Optional" /></label>
         <label>Prayer calculation method
           <select className="input" value={s.method} onChange={(e) => setSettings({ ...s, method: Number(e.target.value) })}>
@@ -342,7 +360,7 @@ export default function App() {
           <button className="chip" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") notifyUser("Amanora test reminder", "Notifications are enabled on this device."); else alert("Turn on Prayer-time reminders first and allow notifications."); }}>Test notification</button>
           <small className="muted">The notification sound is controlled by your phone/browser. Full Azan audio at an exact time while the browser is completely closed needs a push-notification server and native platform support. This web version schedules reminders while Amanora is running.</small>
         </div>
-        <button className="btn wide" onClick={locate}>{locating ? "Finding location…" : "📍 Update my location"}</button>
+        <button className="btn wide" onClick={locate}>{locating ? "مقام تلاش ہو رہا ہے…" : "📍 Update my location"}</button>
         {locErr && <p className="err">{locErr}</p>}
         {installEvt && <button className="btn gold-btn wide" onClick={install}>⬇ Install Amanora on this device</button>}
       </div>
@@ -359,6 +377,7 @@ export default function App() {
         <h3>More</h3>
         <div className="row gap-s wrap">
           <button className="chip" onClick={() => go("Hadith")}>🕌 Hadith</button>
+          <button className="chip" onClick={() => go("Bayan")}>🎙️ Bayans</button>
           <button className="chip" onClick={() => go("Learn")}>🎓 Learn</button>
           <button className="chip" onClick={() => { sessionStorage.removeItem("amanora:entered"); setGate(true); }}>✦ Jannah gate</button>
         </div>
@@ -377,23 +396,26 @@ export default function App() {
     Quran: <Quran settings={s} />,
     Explore: explore,
     Learn: <Learn />,
-    Plus: <Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} />,
+    Plus: <Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} onOpenBayan={() => go("Bayan")} />,
     Profile: me,
     Reels: <Reels />,
     Listen: <Listen />,
+    Bayan: <BayanLibrary />,
     Hadith: <Hadith />,
     Worship: <Worship coords={coords} />,
+    Quiz: <QuizSection />,
+    Stories: <ProphetStories />,
   };
 
   if (gate) return <Gate onDone={enter} />;
 
   return (
-    <div className={"app" + (tab === "Reels" ? " reels-mode" : "") + (oled ? " oled-theme" : "")}>
+    <div className={"app" + (oled ? " oled-theme" : "")} data-language={language}>
       <main className="main">{screen[tab]}</main>
       <nav className="nav">
         {NAV.map((n) => (
           <button key={n.id} className={tab === n.id ? "on" : ""} onClick={() => go(n.id)} aria-current={tab === n.id ? "page" : undefined} aria-label={n.label}>
-            <span aria-hidden="true">{n.icon}</span><small>{n.label}</small>
+            <span aria-hidden="true">{n.icon}</span><small>{isUrdu ? ({Home:"گھر",Quran:"قرآن",Explore:"دریافت",Learn:"سیکھیں",Plus:"پلس",Profile:"پروفائل"}[n.id] || n.label) : n.label}</small>
           </button>
         ))}
       </nav>

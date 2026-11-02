@@ -68,7 +68,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [newAvatar, setNewAvatar] = useState<string>('🧒');
   const [newRole, setNewRole] = useState<string>('Seeker of Jannah');
   const [newPin, setNewPin] = useState<string>('');
-  const [newGoal, setNewGoal] = useState<string>('Daily 5 Prayers & Abdul Bari Moral Shorts');
+  const [newGoal, setNewGoal] = useState<string>('Daily Salah & Quran Reflection');
   
   // PIN verification state
   const [targetProfile, setTargetProfile] = useState<UserProfile | null>(null);
