@@ -1,5 +1,5 @@
 // Amanora service worker: makes the app installable and usable offline.
-const CACHE = "amanora-v2-plus";
+const CACHE = "amanora-v3-reliable-refresh";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./favicon.svg"];
 const API_HOSTS = /(api\.alquran\.cloud|api\.aladhan\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|mp3quran\.net|bigdatacloud\.net)/;
 
@@ -29,16 +29,30 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Our own files + data APIs: show cached copy fast, refresh in the background
-  if (url.origin === location.origin || API_HOSTS.test(url.host)) {
+  // App shell assets are cache-first. Live APIs are network-first so prayer
+  // times and approved daily content do not remain stale indefinitely.
+  if (url.origin === location.origin) {
     e.respondWith(
-      caches.match(req).then((cached) => {
-        const fresh = fetch(req).then((r) => {
-          if (r && (r.status === 200 || r.type === "opaque")) { const c = r.clone(); caches.open(CACHE).then((x) => x.put(req, c)); }
-          return r;
-        }).catch(() => cached);
-        return cached || fresh;
-      })
+      caches.match(req).then((cached) => cached || fetch(req).then((r) => {
+        if (r && r.status === 200) {
+          const copy = r.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return r;
+      }))
+    );
+    return;
+  }
+
+  if (API_HOSTS.test(url.host)) {
+    e.respondWith(
+      fetch(req).then((r) => {
+        if (r && r.status === 200) {
+          const copy = r.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return r;
+      }).catch(() => caches.match(req))
     );
   }
 });

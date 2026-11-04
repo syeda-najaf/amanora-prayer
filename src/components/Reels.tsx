@@ -1,4 +1,5 @@
 import { VideoReelStudio } from "./VideoReelStudio";
+import { CloudReelsFeed } from "./CloudReelsFeed";
 import { useMemo, useState } from 'react';
 import { dayOfYear, shareText, useStored } from '../lib';
 
@@ -35,6 +36,7 @@ export function Reels(){
  return <div className="screen">
   <header className="head"><span className="kicker">AMANORA ORIGINAL LIBRARY</span><h2>Reels & Daily Reflections</h2><p className="muted">Amanora learning cards alongside a real vertical video feed. Videos play inside the app.</p></header>
   <VideoReelStudio />
+  <CloudReelsFeed />
   <div className="row gap-s wrap" style={{marginBottom:12}}>{categories.map(c=><button key={c} className={'chip'+(filter===c?' on':'')} onClick={()=>setFilter(c)}>{c}</button>)}</div>
   <div className="row gap-s"><input className="input" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search reflections"/></div>
   <div className="card" style={{marginTop:14}}><small className="gold">EDITORIAL NOTE</small><p className="muted small">These are Amanora-authored educational reflections, not quotations, formal tafsir or fatwas. Verse references are provided so readers can consult the Quran and qualified scholarship directly.</p></div>

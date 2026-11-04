@@ -32,6 +32,7 @@ export function DailyContentFeed() {
       {item.reference && <small className="muted">Reference: {item.reference}</small>}
       {item.source_name && <small className="muted">Source: {item.source_name}</small>}
       {item.source_url && <a href={item.source_url} target="_blank" rel="noreferrer">View source</a>}
+      {item.media_url && item.media_kind === 'image' && <img className="cloud-reel-media" src={item.media_url} alt={item.title} loading="lazy" />}
       {item.media_url && item.media_kind === 'audio' && <audio controls preload="none" src={item.media_url} />}
       {item.media_url && item.media_kind === 'video' && <video controls playsInline preload="metadata" src={item.media_url} />}
     </article>)}</div>}

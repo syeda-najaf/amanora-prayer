@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import type { ReactElement } from "react";
 import type { Coords, PrayerTime, Settings } from "./types";
 import { AUTHENTIC_HADITHS } from "./data/hadiths";
@@ -65,12 +67,30 @@ export default function App() {
   const [locating, setLocating] = useState(false);
   const [locErr, setLocErr] = useState("");
   const [now, setNow] = useState(new Date());
+  const [resumeTick, setResumeTick] = useState(0);
   const [installEvt, setInstallEvt] = useState<any>(null);
 
   const s: Settings = { ...DEFAULTS, ...settings };
   const today = dateKey(now);
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+  // Re-check prayer reminders whenever the app returns from the background.
+  // Native alarms remain scheduled by Android/iOS while the app is closed; this
+  // refresh repairs the rolling window after a timezone, date, or permission change.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") {
+        setNow(new Date());
+        setResumeTick((value) => value + 1);
+      }
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
   useEffect(() => { document.title = `Amanora – ${tab}`; }, [tab]);
   useEffect(() => {
     const syncInstallPrompt = () => setInstallEvt((window as any).__amanoraInstallPrompt ?? null);
@@ -120,21 +140,57 @@ export default function App() {
     return { name: "Fajr", date: new Date(times[0].date.getTime() + 86400000), label: "Fajr (tomorrow)" };
   }, [times, now]);
 
-  // Schedule the next enabled prayer while Amanora is running. A web PWA cannot
-  // wake itself at an exact time after the browser has been fully closed; that
-  // requires a push service/backend and platform-specific notification setup.
+  // Native Android/iOS schedules a rolling two-day reminder window on-device.
+  // The window is refreshed on launch, app resume, and prayer-setting changes.
+  // Web reminders remain foreground-only because a browser timer cannot wake a closed app.
   useEffect(() => {
-    if (!s.notify || !times.length || typeof Notification === "undefined" || Notification.permission !== "granted") return;
-    const upcoming = times
-      .filter((p) => azanPrefs[p.name] !== false)
-      .map((p) => p.date.getTime() > Date.now() ? p : { ...p, date: new Date(p.date.getTime() + 86400000) })
-      .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-    if (!upcoming) return;
-    const ms = upcoming.date.getTime() - Date.now();
-    if (ms <= 0 || ms > 2147483000) return;
-    const t = window.setTimeout(() => notifyUser(`It's time for ${upcoming.name} Salah`, "Amanora prayer reminder 🤲"), ms);
-    return () => window.clearTimeout(t);
-  }, [times, s.notify, azanPrefs, today]);
+    let cancelled = false;
+    let webTimer: number | undefined;
+    const reminderId = 51001;
+    const schedule = async () => {
+      if (!Capacitor.isNativePlatform()) {
+        if (!s.notify || !times.length || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+        const upcomingWeb = times.filter((p) => azanPrefs[p.name] !== false)
+          .map((p) => p.date.getTime() > Date.now() ? p : { ...p, date: new Date(p.date.getTime() + 86400000) })
+          .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+        if (!upcomingWeb) return;
+        const ms = upcomingWeb.date.getTime() - Date.now();
+        if (ms > 0 && ms <= 2147483000) {
+          webTimer = window.setTimeout(() => notifyUser(`It's time for ${upcomingWeb.name} Salah`, "Amanora prayer reminder 🤲"), ms);
+        }
+        return;
+      }
+      try {
+        const ids = Array.from({ length: 10 }, (_, index) => reminderId + index);
+        await LocalNotifications.cancel({ notifications: ids.map((id) => ({ id })) });
+        if (cancelled || !s.notify || !times.length || !coords) return;
+        const permission = await LocalNotifications.checkPermissions();
+        if (permission.display !== "granted") return;
+
+        // Schedule every enabled prayer for today and tomorrow. Refreshing Amanora
+        // replaces this rolling window, avoiding a single fragile next-prayer alarm.
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowResult = await fetchTimings(coords, s.method, tomorrow);
+        if (cancelled) return;
+        const upcoming = [...times, ...tomorrowResult.times]
+          .filter((prayer) => azanPrefs[prayer.name] !== false && prayer.date.getTime() > Date.now())
+          .sort((a, b) => a.date.getTime() - b.date.getTime());
+        if (!upcoming.length) return;
+        await LocalNotifications.schedule({
+          notifications: upcoming.slice(0, 10).map((prayer, index) => ({
+            id: reminderId + index,
+            title: `It's time for ${prayer.name} Salah`,
+            body: "Amanora prayer reminder 🤲",
+            schedule: { at: prayer.date },
+            extra: { prayer: prayer.name, source: "amanora-prayer-times" }
+          }))
+        });
+      } catch (error) { console.warn("Amanora prayer reminders could not be scheduled", error); }
+    };
+    void schedule();
+    return () => { cancelled = true; if (webTimer !== undefined) window.clearTimeout(webTimer); };
+  }, [times, s.notify, azanPrefs, today, coords, s.method, resumeTick]);
 
   /* ---- prayer log and streak (real, from what you tick) ---- */
   const doneToday = log[today] || [];
@@ -158,11 +214,51 @@ export default function App() {
 
   const toggleNotify = async () => {
     if (s.notify) { setSettings({ ...s, notify: false }); return; }
-    if (typeof Notification === "undefined") { alert("This browser does not support notifications."); return; }
-    const r = await Notification.requestPermission();
-    if (r === "granted") setSettings({ ...s, notify: true });
-    else alert("Notifications are blocked. Allow them in your browser settings.");
+    try {
+      if (Capacitor.isNativePlatform()) {
+        let permission = await LocalNotifications.checkPermissions();
+        if (permission.display !== "granted") permission = await LocalNotifications.requestPermissions();
+        if (permission.display === "granted") setSettings({ ...s, notify: true });
+        else alert("Allow notifications for Amanora in your phone settings.");
+        return;
+      }
+      if (typeof Notification === "undefined") { alert("This browser does not support notifications."); return; }
+      const r = await Notification.requestPermission();
+      if (r === "granted") setSettings({ ...s, notify: true });
+      else alert("Notifications are blocked. Allow them in your browser settings.");
+    } catch { alert("Could not enable notifications. Please check Amanora's notification permission in Settings."); }
   };
+  const testPrayerNotification = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        let permission = await LocalNotifications.checkPermissions();
+        if (permission.display !== "granted") permission = await LocalNotifications.requestPermissions();
+        if (permission.display !== "granted") {
+          alert("Allow notifications for Amanora in your phone settings, then try again.");
+          return;
+        }
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: 51999,
+            title: "Amanora test reminder",
+            body: "Your prayer reminder notifications are working on this device. 🤲",
+            schedule: { at: new Date(Date.now() + 5000) },
+          }],
+        });
+        alert("A test notification is scheduled to appear in about 5 seconds.");
+        return;
+      }
+      if (typeof Notification === "undefined" || Notification.permission !== "granted") {
+        alert("Turn on Prayer-time reminders and allow browser notifications first.");
+        return;
+      }
+      notifyUser("Amanora test reminder", "Notifications are enabled on this device.");
+    } catch (error) {
+      console.warn("Amanora test notification failed", error);
+      alert("The test notification could not be scheduled. Check Amanora's notification permission in Settings.");
+    }
+  };
+
   const install = async () => {
     const promptEvent = installEvt ?? (window as any).__amanoraInstallPrompt;
     if (!promptEvent) {
@@ -359,7 +455,7 @@ export default function App() {
           <div className="row gap-s wrap">
             {PRAYERS.map((prayer) => <label className="chip" key={prayer} style={{display:"inline-flex",alignItems:"center",gap:6}}><input type="checkbox" checked={azanPrefs[prayer] !== false} onChange={(e) => setAzanPrefs({ ...azanPrefs, [prayer]: e.target.checked })} />{prayer}</label>)}
           </div>
-          <button className="chip" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") notifyUser("Amanora test reminder", "Notifications are enabled on this device."); else alert("Turn on Prayer-time reminders first and allow notifications."); }}>Test notification</button>
+          <button className="chip" onClick={() => void testPrayerNotification()}>Test notification</button>
           <small className="muted">The notification sound is controlled by your phone/browser. Full Azan audio at an exact time while the browser is completely closed needs a push-notification server and native platform support. This web version schedules reminders while Amanora is running.</small>
         </div>
         <button className="btn wide" onClick={locate}>{locating ? "مقام تلاش ہو رہا ہے…" : "📍 Update my location"}</button>

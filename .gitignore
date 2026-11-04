@@ -5,3 +5,10 @@ dist/
 !.env.example
 .DS_Store
 .vercel/
+
+.env
+.env.*
+!.env.example
+node_modules
+dist
+android/.idea/

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TouchEvent as RTouchEvent } from "react";
 import type { Ayah, Surah, Settings } from "../types";
-import { getSurahs, useStored } from "../lib";
+import { dateKey, getSurahs, useStored } from "../lib";
 
 const BASMALA_WORDS = 4;
 
 export function Quran({ settings }: { settings: Settings }) {
   const [page, setPage] = useStored<number>("quran-page", 1);
+  const [, setLastAyah] = useStored<number>("quran-last-ayah", 0);
   const [bookmarks, setBookmarks] = useStored<number[]>("quran-bookmarks", []);
+  const [readingPages, setReadingPages] = useStored<Record<string, number[]>>("quran-reading-pages", {});
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
   const [trans, setTrans] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -21,6 +23,14 @@ export function Quran({ settings }: { settings: Settings }) {
   const audio = useRef<HTMLAudioElement | null>(null);
   const queue = useRef<Ayah[]>([]);
   const touchX = useRef<number | null>(null);
+
+  const recordPageRead = useCallback(() => {
+    const key = dateKey();
+    setReadingPages((previous) => {
+      const pages = previous[key] || [];
+      return pages.includes(page) ? previous : { ...previous, [key]: [...pages, page] };
+    });
+  }, [page, setReadingPages]);
 
   const stop = useCallback(() => {
     queue.current = [];
@@ -77,6 +87,7 @@ export function Quran({ settings }: { settings: Settings }) {
   const playFrom = useCallback((list: Ayah[]) => {
     if (!list.length) { setPlaying(null); return; }
     const [cur, ...rest] = list;
+    recordPageRead();
     queue.current = rest;
     setPlaying(cur.number);
     if (!audio.current) audio.current = new Audio();
@@ -90,7 +101,7 @@ export function Quran({ settings }: { settings: Settings }) {
     };
     a.src = urlFor(settings.reciter);
     a.play().catch(() => setPlaying(null));
-  }, [settings.reciter]);
+  }, [settings.reciter, page, recordPageRead]);
 
   const toggleAyah = (ay: Ayah) => (playing === ay.number ? stop() : playFrom([ay]));
   const playPage = () => (playing ? stop() : playFrom(ayahs));
@@ -123,6 +134,8 @@ export function Quran({ settings }: { settings: Settings }) {
         <span className="kicker">THE NOBLE QURAN</span>
         <div className="quran-heading-row"><div><h2>Quran</h2><p className="muted">A calm, page-by-page Mushaf experience</p></div><span className="quran-seal">۞</span></div>
       </header>
+
+      <p className="muted small">Reading activity today: {(readingPages[dateKey()] || []).length} page(s) opened through ayah interaction or recitation.</p>
 
       <div className="quran-controls">
         <button className="select" onClick={() => setPicker(!picker)}>
@@ -188,7 +201,7 @@ export function Quran({ settings }: { settings: Settings }) {
                   <button
                     type="button"
                     className={"mushaf-ayah" + (playing === ay.number ? " playing" : "") + (selected === ay.number ? " selected" : "")}
-                    onClick={() => setSelected(selected === ay.number ? null : ay.number)}
+                    onClick={() => { setSelected(selected === ay.number ? null : ay.number); setLastAyah(ay.number); recordPageRead(); }}
                     aria-label={`${ay.surah?.englishName || "Quran"}, ayah ${ay.numberInSurah}`}
                   >
                     <span className="mushaf-ayah-text">{strip(ay)}</span>

@@ -29,3 +29,16 @@ Date: 2 November 2026
 - The uploaded archive was extracted and inspected.
 - A clean dependency install could not complete in this environment (network/package retrieval timeout); offline installation also failed because required packages were not cached.
 - Consequently, TypeScript and production build checks could not be run after this change. Run `npm ci`, `npm run check`, and `npm run build` on the development machine before deployment.
+
+
+## Reliability pass · 4 November 2026
+
+This pass adds two practical reliability improvements to the active app entry point:
+
+- Native prayer reminders are refreshed when Amanora returns to the foreground, in addition to changes in date, prayer calculation method, location, and reminder preferences. This refreshes the rolling two-day schedule after the app has been backgrounded.
+- The Profile screen's Test notification control now uses Capacitor Local Notifications on Android/iOS and schedules a native test alert about five seconds later. Browser testing continues to use the browser notification API.
+- The service worker cache version is incremented. App shell assets use cache-first behavior; supported live API requests use network-first behavior with cached fallback, reducing the chance that stale prayer-time/API data is served indefinitely.
+
+### Verification boundary
+
+The service worker passes `node --check`. A full TypeScript and Vite production build could not be run in this environment because `npm ci` timed out before dependencies were installed. Re-run `npm ci`, `npm run check`, and `npm run build` on the Windows development machine before installing this package. Native reminder delivery, Xiaomi battery settings, and exact alarm behavior must be verified on the physical phone. Distinct Adhan sound assets are not included in this project package.

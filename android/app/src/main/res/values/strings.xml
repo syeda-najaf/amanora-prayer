@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Amanora</string>
+    <string name="title_activity_main">Amanora</string>
+    <string name="package_name">com.amanora.app</string>
+    <string name="custom_url_scheme">com.amanora.app</string>
+</resources>

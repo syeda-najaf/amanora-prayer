@@ -1,0 +1,37 @@
+AMANORA MEDIA DELIVERY UPDATE
+
+This update adds:
+- Signed URLs for files stored in the private `amanora-media` bucket.
+- A published-only Storage SELECT policy migration.
+- A cloud-published Reel feed with image, video and audio rendering.
+- Image rendering in the existing Daily Content Feed.
+
+IMPORTANT: The bucket stays PRIVATE. Do not make it public.
+
+BEFORE DEPLOYING
+1. In Supabase > SQL Editor, run the contents of:
+   supabase/migrations/202611030001_amanora_published_media.sql
+2. Confirm it succeeds.
+3. Copy the updated source files into your existing project, preserving your local .env:
+   - src/services/sharedContent.ts
+   - src/components/CloudReelsFeed.tsx
+   - src/components/Reels.tsx
+   - src/components/DailyContentFeed.tsx
+   - src/styles.css
+   - supabase/migrations/202611030001_amanora_published_media.sql
+4. Run:
+   npm run check
+   npm run build
+5. Only if both succeed, deploy:
+   vercel --prod
+
+TEST
+- Open /owner and publish a Reel with an image or video.
+- Open the Reels tab in Amanora.
+- Published media should display/play inside the app.
+- Draft and archived media should remain inaccessible to public visitors.
+
+NOTES
+- Signed URLs expire after one hour. The feed refreshes every five minutes and requests fresh signed URLs.
+- The uploaded source ZIP contained a .env file. It has deliberately NOT been included in this updated ZIP. Keep your existing local .env private and do not paste keys into chat.
+- A production build could not be verified in this environment because dependency installation did not complete. Run the checks locally before deployment.

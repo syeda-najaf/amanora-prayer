@@ -71,12 +71,16 @@ export const DailyDeenTracker: React.FC<DailyDeenTrackerProps> = ({
   userPoints,
   onAddPoints,
 }) => {
+  const todayKey = new Date().toLocaleDateString('en-CA');
   const [completedHabits, setCompletedHabits] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('amanora_completed_habits_today');
-      return saved ? JSON.parse(saved) : ['fajr_kursi'];
+      const parsed = saved ? JSON.parse(saved) : null;
+      // Never pre-mark a worship action. A new local date starts with a clean checklist.
+      if (parsed && parsed.date === todayKey && Array.isArray(parsed.items)) return parsed.items;
+      return [];
     } catch {
-      return ['fajr_kursi'];
+      return [];
     }
   });
 
@@ -96,7 +100,7 @@ export const DailyDeenTracker: React.FC<DailyDeenTrackerProps> = ({
 
     setCompletedHabits(updated);
     try {
-      localStorage.setItem('amanora_completed_habits_today', JSON.stringify(updated));
+      localStorage.setItem('amanora_completed_habits_today', JSON.stringify({ date: todayKey, items: updated }));
     } catch (e) {
       console.error(e);
     }
