@@ -1,6 +1,6 @@
-// Amanora service worker: makes the app installable and usable offline.
-const CACHE = "amanora-v3-reliable-refresh";
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./favicon.svg"];
+﻿// Amanora service worker: makes the app installable and usable offline.
+const CACHE = "amanora-v4-new-brand-icons";
+const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./amanora-pwa-192.png", "./amanora-pwa-512.png", "./amanora-pwa-180.png", "./favicon.svg"];
 const API_HOSTS = /(api\.alquran\.cloud|api\.aladhan\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|mp3quran\.net|bigdatacloud\.net)/;
 
 self.addEventListener("install", (e) => {
@@ -56,3 +56,4 @@ self.addEventListener("fetch", (e) => {
     );
   }
 });
+
