@@ -35,7 +35,7 @@ export function CloudReelsFeed() {
   }, []);
 
   if (!sharedContentConfigured) {
-    return <section className="card"><h3>Published Amanora Reels</h3><p className="muted small">Cloud publishing is not configured yet.</p></section>;
+    return null;
   }
 
   return (
@@ -47,7 +47,7 @@ export function CloudReelsFeed() {
       {loading && <p className="muted small">Loading published Reels…</p>}
       {error && <p className="err small">{error}</p>}
       {!loading && !error && items.length === 0 && (
-        <div className="card"><p className="muted small">No published Reels yet. Upload a Reel in Owner Studio, submit it for review, approve it and publish it to make it appear here.</p></div>
+        <div className="card"><p className="muted small">No new community Reels right now. New ones appear here automatically.</p></div>
       )}
       {items.map((item) => (
         <article className="card cloud-reel-card" key={item.id}>
@@ -67,7 +67,7 @@ export function CloudReelsFeed() {
             <audio className="cloud-reel-audio" src={item.media_url} controls preload="none" />
           )}
           {item.media_kind && !item.media_url && (
-            <p className="muted small">Media is attached, but its secure link could not be created. Check the Supabase Storage read policy.</p>
+            <p className="muted small">This media is temporarily unavailable.</p>
           )}
           {item.reference && <small className="muted">Reference: {item.reference}</small>}
           {item.source_name && <small className="muted">Source: {item.source_name}</small>}

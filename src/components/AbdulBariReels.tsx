@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import React, { useState, useEffect, useRef } from 'react';
 import { ShortStory } from '../types';
 import { AbdulBariCartoon } from './AbdulBariCartoon';
@@ -79,7 +80,7 @@ export const AbdulBariReels: React.FC<AbdulBariReelsProps> = ({
     }
 
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert("Speech synthesis is not supported in this browser.");
+      toast("Speech synthesis is not supported in this browser.");
       return;
     }
 

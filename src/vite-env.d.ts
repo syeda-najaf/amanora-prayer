@@ -2,3 +2,5 @@ interface ImportMetaEnv { readonly PROD: boolean; readonly DEV: boolean; readonl
 interface ImportMeta { readonly env: ImportMetaEnv }
 declare module "*.css";
 declare module "qrcode.react" { export const QRCodeSVG: any; }
+
+interface ImportMetaEnv { readonly VITE_QURAN_API_BASE?: string }

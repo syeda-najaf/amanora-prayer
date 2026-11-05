@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import React, { useState } from 'react';
 import { MuftiBayan } from '../types';
 import { IslamicButton } from './IslamicButton';
@@ -245,7 +246,7 @@ export const MuftiBayanSection: React.FC<MuftiBayanSectionProps> = ({
     playTactileClick('gold');
 
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert("Audio speech synthesis is not supported on your browser.");
+      toast("Audio speech synthesis is not supported on your browser.");
       return;
     }
 

@@ -23,6 +23,7 @@ export function DailyContentFeed() {
     return () => { active = false; window.clearInterval(timer); };
   }, []);
 
+  if (!sharedContentConfigured) return null;
   return <section className="card" aria-live="polite">
     <div className="row between"><div><small className="gold">AMANORA · DAILY FROM THE CLOUD</small><h3>Fresh for the Ummah</h3></div><span className="chip">{sharedContentConfigured ? 'Cloud feed' : 'Setup needed'}</span></div>
     {!sharedContentConfigured ? <p className="muted small">Connect the Supabase project using the setup guide to receive approved, shared daily content on every device. Your existing app content remains available.</p> : loading ? <p className="muted small">Checking today's published content…</p> : error ? <p className="err small">{error}</p> : items.length === 0 ? <p className="muted small">No cloud items have been published yet. Add and approve content in the owner workflow, then schedule its publication.</p> : <div className="daily-cloud-list">{items.map(item => <article key={item.id} className="daily-cloud-item">
@@ -31,8 +32,7 @@ export function DailyContentFeed() {
       {(item.body || item.body_ur || item.body_ar) && <p className="small">{item.body || item.body_ur || item.body_ar}</p>}
       {item.reference && <small className="muted">Reference: {item.reference}</small>}
       {item.source_name && <small className="muted">Source: {item.source_name}</small>}
-      {item.source_url && <a href={item.source_url} target="_blank" rel="noreferrer">View source</a>}
-      {item.media_url && item.media_kind === 'image' && <img className="cloud-reel-media" src={item.media_url} alt={item.title} loading="lazy" />}
+            {item.media_url && item.media_kind === 'image' && <img className="cloud-reel-media" src={item.media_url} alt={item.title} loading="lazy" />}
       {item.media_url && item.media_kind === 'audio' && <audio controls preload="none" src={item.media_url} />}
       {item.media_url && item.media_kind === 'video' && <video controls playsInline preload="metadata" src={item.media_url} />}
     </article>)}</div>}

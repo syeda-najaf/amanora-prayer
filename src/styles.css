@@ -727,3 +727,73 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-w
 .cloud-reel-card { margin: 12px 0; overflow: hidden; }
 .cloud-reel-media { display: block; width: 100%; max-height: 560px; object-fit: contain; border-radius: 16px; background: #071a14; margin: 12px 0; }
 .cloud-reel-audio { display: block; width: 100%; margin: 12px 0; }
+
+
+/* Amanora Pilgrim Companion */
+.pilgrim-screen { padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.pilgrim-tabs { display:flex; gap:7px; overflow-x:auto; padding:2px 0 6px; }
+.pilgrim-tabs .chip { flex:none; font-size:11px; padding:9px 12px; }
+.pilgrim-stack { display:flex; flex-direction:column; gap:12px; }
+.pilgrim-live-hero { border-radius:20px; padding:20px; color:#fff; background:radial-gradient(circle at 90% 0%,rgba(201,162,77,.32),transparent 42%),linear-gradient(145deg,#17483a,#0c241d); border:1px solid rgba(201,162,77,.4); }
+.pilgrim-live-hero > span { color:#e8d39e; font-family:serif; font-size:23px; }
+.pilgrim-live-hero h3 { color:#fff; margin:8px 0; font-size:20px; }
+.pilgrim-live-hero p { color:#d3e2d8; font-size:12px; line-height:1.6; }
+.pilgrim-live-card { display:flex; align-items:center; gap:12px; padding:14px; border-radius:17px; border:1px solid var(--line); background:var(--panel); color:var(--text); text-decoration:none; }
+.pilgrim-live-card > span:nth-child(2) { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; }
+.pilgrim-live-card small { color:var(--muted); line-height:1.45; font-size:11px; }
+.pilgrim-live-card strong { color:var(--gold2); }
+.pilgrim-icon { width:46px; height:46px; display:grid; place-items:center; flex:none; border-radius:15px; background:var(--panel2); font-size:24px; }
+.umrah-step-icon { font-size:44px; margin:8px 0 0; }
+.pilgrim-note { background:var(--sand); border:1px solid rgba(201,162,77,.35); border-radius:14px; padding:12px; font-size:12px; }
+.pilgrim-note p { margin-top:4px; line-height:1.55; }
+.city-place-list { display:grid; gap:9px; margin:4px 0; }
+.city-place-list div { display:flex; gap:9px; align-items:flex-start; font-size:13px; }
+.city-place-list span { color:var(--gold2); }
+.pilgrim-check { display:flex; flex-direction:row; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); color:var(--text); font-size:12px; }
+.pilgrim-check input { accent-color:var(--mint); width:17px; height:17px; }
+.pilgrim-screen .input { margin-top:5px; }
+.pilgrim-screen .row .btn { white-space:nowrap; }
+@media (max-width:380px) { .pilgrim-live-card { gap:8px; padding:11px; } .pilgrim-live-card small { font-size:10px; } }
+
+/* Indo-Pak printed Mushaf look: green ornamental frame, justified lines, round green ayah markers */
+.mushaf { max-width:480px; padding:7px; border:2px solid #2f7a3e; border-radius:3px; background:repeating-linear-gradient(45deg,#4f9d5c 0 5px,#d6ecd6 5px 9px); box-shadow:0 8px 24px rgba(20,50,25,.18); }
+.mushaf::before { display:none; }
+.mushaf-inner { background:#fff; border:2px solid #2f7a3e; border-radius:0; padding:10px 8px 6px; min-height:clamp(430px,132vw,700px); }
+.mushaf-topline { border-bottom:0; color:#2f6b3a; font-family:"Scheherazade New","Amiri",serif; font-size:clamp(12px,3.4vw,16px); padding-bottom:4px; }
+.mushaf-topline span:nth-child(2) { font-size:clamp(13px,3.8vw,17px); }
+.mushaf-text { display:block; font-family:"Noorehuda","Al Qalam Quran Majeed","PDMS Saleem_QuranFont","Scheherazade New","Amiri",serif; font-size:clamp(21px,6vw,28px); font-weight:700; line-height:2.25; color:#111; text-align:justify; text-align-last:center; word-spacing:0; }
+.mf-para { margin:0; text-align:justify; text-align-last:center; }
+.mushaf-ayah { cursor:pointer; border-radius:4px; padding:0 1px; }
+.mushaf-ayah.selected { background:rgba(255,226,130,.55); }
+.mushaf-ayah.playing { background:rgba(150,210,150,.45); }
+.mushaf-ayah .end { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; width:1.45em; height:1.45em; margin:0 .15em; border-radius:50%; border:2px solid #3f9a4d; background:radial-gradient(circle,#f1fbef 55%,#cfeccb 100%); color:#1d5a2a; font-size:.5em; font-weight:700; line-height:1; vertical-align:middle; }
+.mf-head { display:grid; grid-template-columns:1fr 2.2fr 1fr; align-items:center; gap:4px; margin:6px 0 4px; font-size:clamp(14px,3.9vw,18px); line-height:1.5; text-align:center; color:#1d5a2a; }
+.mf-head .mf-side { border:1.5px solid #3f9a4d; border-radius:6px; padding:2px 4px; background:#f3faf1; font-size:.8em; }
+.mf-head .mf-side b { display:block; }
+.mf-head .mf-mid { border:2px solid #3f9a4d; border-radius:8px; padding:5px 6px; background:linear-gradient(#e6f5e3,#f6fcf4); font-weight:700; }
+.mf-bismillah { margin:4px auto 6px; padding:2px 10px; border:1.5px solid #3f9a4d; border-radius:8px; text-align:center; color:#111; background:#f8fdf6; line-height:1.9; }
+.mf-footer { text-align:center; margin-top:6px; padding-top:4px; color:#2f6b3a; font-family:"Scheherazade New","Amiri",serif; font-size:15px; border-top:1px solid #cfe5cf; }
+.mushaf .page-no { display:none; }
+
+/* Line-by-line mushaf page */
+.mf-swipe { touch-action:pan-y; user-select:none; -webkit-user-select:none; transition:transform .17s ease, opacity .17s ease; will-change:transform; }
+.mf-swipe.dragging { transition:none; cursor:grabbing; }
+.mf-swipe.out-next { transform:translateX(105%) rotate(4deg); opacity:0; }
+.mf-swipe.out-prev { transform:translateX(-105%) rotate(-4deg); opacity:0; }
+.mf-swipe.in-next { animation:mfInL .24s ease-out; }
+.mf-swipe.in-prev { animation:mfInR .24s ease-out; }
+@keyframes mfInL { from { transform:translateX(-70%); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes mfInR { from { transform:translateX(70%); opacity:0; } to { transform:none; opacity:1; } }
+.mf-pagebox { --mf-lh:calc(var(--mf-fs) * 2.1); display:grid; grid-template-rows:repeat(var(--mf-rows,16), var(--mf-lh)); width:100%; direction:rtl; font-family:"Noorehuda","Al Qalam Quran Majeed","PDMS Saleem_QuranFont","Amiri Quran","Scheherazade New","Amiri",serif; font-size:var(--mf-fs); font-weight:700; color:#111; min-height:calc(var(--mf-lh) * 16); align-content:space-between; }
+.mf-pagebox.short { align-content:center; }
+.mf-line { display:flex; align-items:center; min-width:0; }
+.mf-words { display:flex; justify-content:space-between; align-items:center; width:100%; white-space:nowrap; line-height:1; }
+.mf-words.ctr { justify-content:center; gap:.45em; }
+.mf-pagebox.measuring .mf-words { justify-content:flex-start; width:max-content; gap:0; }
+.mw { cursor:pointer; border-radius:4px; padding:0 .04em; }
+.mw.selected, .end.selected { background:rgba(255,226,130,.6); }
+.mw.playing, .end.playing { background:rgba(150,210,150,.5); }
+.mf-words .end { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; width:1.45em; height:1.45em; border-radius:50%; border:.07em solid #3f9a4d; background:radial-gradient(circle,#f1fbef 55%,#cfeccb 100%); color:#1d5a2a; font-size:.5em; font-weight:700; line-height:1; flex:none; cursor:pointer; }
+.mf-pagebox .mf-head { width:100%; font-size:.62em; margin:0; }
+.mf-pagebox .mf-bismillah { width:100%; font-size:.78em; margin:0; padding:0 .6em; }
+.mf-footer { display:flex; justify-content:space-between; }

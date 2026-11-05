@@ -108,3 +108,8 @@ export async function shareText(title: string, text: string) {
     return "copied";
   } catch { return "cancelled"; }
 }
+
+/* ---------- in-app notice (replaces browser alert/confirm pop-ups) ---------- */
+export function toast(message: string) {
+  window.dispatchEvent(new CustomEvent("amanora-toast", { detail: message }));
+}

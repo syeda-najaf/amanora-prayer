@@ -7,7 +7,7 @@ import { AUTHENTIC_HADITHS } from "./data/hadiths";
 import { DAILY_GOOD, RECITERS, TRANSLATIONS } from "./data/content";
 import UpiPayment from "./components/UpiPayment";
 import {
-  METHODS, PRAYERS, cityName, dateKey, dayOfYear, fetchTimings, fmtCountdown, fmtTime, getPosition, useStored,
+  METHODS, PRAYERS, cityName, dateKey, dayOfYear, fetchTimings, fmtCountdown, fmtTime, getPosition, useStored, toast,
 } from "./lib";
 import { Gate } from "./components/Gate";
 import { Quran } from "./components/Quran";
@@ -22,8 +22,11 @@ import { DailyDua } from "./components/DailyDua";
 import { QuizSection } from "./components/QuizSection";
 import { ProphetStories } from "./components/ProphetStories";
 import { DailyContentFeed } from "./components/DailyContentFeed";
+import { KhatmPlanner } from "./components/KhatmPlanner";
+import { UmrahCompanion } from "./components/UmrahCompanion";
+import { AutoInsights } from "./components/AutoInsights";
 
-type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Bayan" | "Hadith" | "Worship" | "Quiz" | "Stories";
+type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Bayan" | "Hadith" | "Worship" | "Quiz" | "Stories" | "Umrah";
 
 const DEFAULTS: Settings = { name: "", method: 3, reciter: "ar.alafasy", translation: "en.sahih", notify: false };
 
@@ -44,6 +47,25 @@ function notifyUser(title: string, body: string) {
   } catch { /* notifications unavailable */ }
 }
 
+let azanAudio: HTMLAudioElement | null = null;
+function playAzan(onFail?: () => void) {
+  try {
+    azanAudio?.pause();
+    azanAudio = new Audio("/audio/azan.mp3");
+    azanAudio.onerror = () => onFail?.();
+    azanAudio.play().catch(() => onFail?.());
+  } catch { onFail?.(); }
+}
+function stopAzan() { try { azanAudio?.pause(); azanAudio = null; } catch { /* ignore */ } }
+
+async function ensureChannels() {
+  if (Capacitor.getPlatform() !== "android") return;
+  try {
+    await LocalNotifications.createChannel({ id: "azan-v1", name: "Azan at prayer time", description: "Plays the Azan when it is time for Salah", importance: 5, visibility: 1, sound: "azan.mp3", vibration: true });
+    await LocalNotifications.createChannel({ id: "reminder-v1", name: "Prayer reminders", description: "Standard notification sound", importance: 4, visibility: 1, vibration: true });
+  } catch (error) { console.warn("Amanora notification channels could not be created", error); }
+}
+
 export default function App() {
   const [gate, setGate] = useState(() => !sessionStorage.getItem("amanora:entered"));
   const [tab, setTab] = useState<Tab>("Home");
@@ -54,12 +76,11 @@ export default function App() {
   const [coords, setCoords] = useStored<Coords | null>("coords", null);
   const [log, setLog] = useStored<Record<string, string[]>>("prayer-log", {});
   const [journal, setJournal] = useStored<string>("journal", "");
-  const [quranPage] = useStored<number>("quran-page", 1);
-  const [homeFeedback, setHomeFeedback] = useStored<"yes" | "no" | null>("feedback-home", null);
   const [oled, setOled] = useStored<boolean>("oled-theme", false);
   const [paymentPlan, setPaymentPlan] = useState<"monthly" | "yearly">("monthly");
   const [homeWidgets, setHomeWidgets] = useStored<string[]>("home-widgets", ["Quran", "Stories", "Reels", "Listen", "Hadith", "Worship", "Learn", "Quiz"]);
 
+  const [azanSound, setAzanSound] = useStored<boolean>("azan-sound", true);
   const [azanPrefs, setAzanPrefs] = useStored<Record<string, boolean>>("azan-prayer-prefs", { Fajr: true, Dhuhr: true, Asr: true, Maghrib: true, Isha: true });
   const [times, setTimes] = useState<PrayerTime[]>([]);
   const [hijri, setHijri] = useState("");
@@ -69,6 +90,13 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [resumeTick, setResumeTick] = useState(0);
   const [installEvt, setInstallEvt] = useState<any>(null);
+  const [toastMsg, setToastMsg] = useState("");
+  useEffect(() => {
+    let t: number | undefined;
+    const show = (e: Event) => { setToastMsg(String((e as CustomEvent).detail || "")); window.clearTimeout(t); t = window.setTimeout(() => setToastMsg(""), 4500); };
+    window.addEventListener("amanora-toast", show);
+    return () => { window.removeEventListener("amanora-toast", show); window.clearTimeout(t); };
+  }, []);
 
   const s: Settings = { ...DEFAULTS, ...settings };
   const today = dateKey(now);
@@ -156,12 +184,13 @@ export default function App() {
         if (!upcomingWeb) return;
         const ms = upcomingWeb.date.getTime() - Date.now();
         if (ms > 0 && ms <= 2147483000) {
-          webTimer = window.setTimeout(() => notifyUser(`It's time for ${upcomingWeb.name} Salah`, "Amanora prayer reminder 🤲"), ms);
+          webTimer = window.setTimeout(() => { notifyUser(`It's time for ${upcomingWeb.name} Salah`, "Amanora prayer reminder 🤲"); if (azanSound) playAzan(); }, ms);
         }
         return;
       }
       try {
         const ids = Array.from({ length: 10 }, (_, index) => reminderId + index);
+        await ensureChannels();
         await LocalNotifications.cancel({ notifications: ids.map((id) => ({ id })) });
         if (cancelled || !s.notify || !times.length || !coords) return;
         const permission = await LocalNotifications.checkPermissions();
@@ -182,7 +211,9 @@ export default function App() {
             id: reminderId + index,
             title: `It's time for ${prayer.name} Salah`,
             body: "Amanora prayer reminder 🤲",
-            schedule: { at: prayer.date },
+            schedule: { at: prayer.date, allowWhileIdle: true },
+            channelId: azanSound ? "azan-v1" : "reminder-v1",
+            sound: azanSound ? "azan.mp3" : undefined,
             extra: { prayer: prayer.name, source: "amanora-prayer-times" }
           }))
         });
@@ -190,7 +221,7 @@ export default function App() {
     };
     void schedule();
     return () => { cancelled = true; if (webTimer !== undefined) window.clearTimeout(webTimer); };
-  }, [times, s.notify, azanPrefs, today, coords, s.method, resumeTick]);
+  }, [times, s.notify, azanPrefs, azanSound, today, coords, s.method, resumeTick]);
 
   /* ---- prayer log and streak (real, from what you tick) ---- */
   const doneToday = log[today] || [];
@@ -209,6 +240,9 @@ export default function App() {
 
   const enter = () => { sessionStorage.setItem("amanora:entered", "1"); setGate(false); };
   const go = (t: Tab) => { setTab(t); window.scrollTo({ top: 0 }); };
+  const umrahDepart = (() => { try { return JSON.parse(localStorage.getItem("amanora:umrah-depart") || '""') as string; } catch { return ""; } })();
+  const umrahDays = umrahDepart ? Math.ceil((new Date(umrahDepart + "T00:00:00").getTime() - now.getTime()) / 86400000) : null;
+  const quranPage = (() => { try { const lines = localStorage.getItem("amanora:quran-mode") === JSON.stringify("lines"); return Number(JSON.parse(localStorage.getItem(lines ? "amanora:quran-ip16-page" : "amanora:quran-page") || "1")) || 1; } catch { return 1; } })();
   const good = DAILY_GOOD[dayOfYear() % DAILY_GOOD.length];
   const hadith = AUTHENTIC_HADITHS[dayOfYear() % AUTHENTIC_HADITHS.length];
 
@@ -219,14 +253,14 @@ export default function App() {
         let permission = await LocalNotifications.checkPermissions();
         if (permission.display !== "granted") permission = await LocalNotifications.requestPermissions();
         if (permission.display === "granted") setSettings({ ...s, notify: true });
-        else alert("Allow notifications for Amanora in your phone settings.");
+        else toast("Allow notifications for Amanora in your phone settings.");
         return;
       }
-      if (typeof Notification === "undefined") { alert("This browser does not support notifications."); return; }
+      if (typeof Notification === "undefined") { toast("This browser does not support notifications."); return; }
       const r = await Notification.requestPermission();
       if (r === "granted") setSettings({ ...s, notify: true });
-      else alert("Notifications are blocked. Allow them in your browser settings.");
-    } catch { alert("Could not enable notifications. Please check Amanora's notification permission in Settings."); }
+      else toast("Notifications are blocked. Allow them in your browser settings.");
+    } catch { toast("Could not enable notifications. Please check Amanora's notification permission in Settings."); }
   };
   const testPrayerNotification = async () => {
     try {
@@ -234,7 +268,7 @@ export default function App() {
         let permission = await LocalNotifications.checkPermissions();
         if (permission.display !== "granted") permission = await LocalNotifications.requestPermissions();
         if (permission.display !== "granted") {
-          alert("Allow notifications for Amanora in your phone settings, then try again.");
+          toast("Allow notifications for Amanora in your phone settings, then try again.");
           return;
         }
         await LocalNotifications.schedule({
@@ -242,27 +276,31 @@ export default function App() {
             id: 51999,
             title: "Amanora test reminder",
             body: "Your prayer reminder notifications are working on this device. 🤲",
-            schedule: { at: new Date(Date.now() + 5000) },
+            schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true },
+            channelId: azanSound ? "azan-v1" : "reminder-v1",
+            sound: azanSound ? "azan.mp3" : undefined,
           }],
         });
-        alert("A test notification is scheduled to appear in about 5 seconds.");
+        await ensureChannels();
+        toast("Test reminder arrives in about 5 seconds.");
         return;
       }
       if (typeof Notification === "undefined" || Notification.permission !== "granted") {
-        alert("Turn on Prayer-time reminders and allow browser notifications first.");
+        toast("Turn on Prayer-time reminders and allow browser notifications first.");
         return;
       }
       notifyUser("Amanora test reminder", "Notifications are enabled on this device.");
+      if (azanSound) playAzan(() => toast("Azan audio file not found. Add azan.mp3 to public/audio."));
     } catch (error) {
       console.warn("Amanora test notification failed", error);
-      alert("The test notification could not be scheduled. Check Amanora's notification permission in Settings.");
+      toast("The test notification could not be scheduled. Check Amanora's notification permission in Settings.");
     }
   };
 
   const install = async () => {
     const promptEvent = installEvt ?? (window as any).__amanoraInstallPrompt;
     if (!promptEvent) {
-      alert("Amanora is not ready for automatic installation in this browser. In Chrome, open the menu and choose Install app or Add to Home screen.");
+      toast("Amanora is not ready for automatic installation in this browser. In Chrome, open the menu and choose Install app or Add to Home screen.");
       return;
     }
     try {
@@ -275,8 +313,9 @@ export default function App() {
       setInstallEvt(null);
     }
   };
+  const [confirmReset, setConfirmReset] = useState(false);
   const resetAll = () => {
-    if (!confirm("Delete all saved data on this device (bookmarks, prayer log, journal, my links)?")) return;
+    if (!confirmReset) { setConfirmReset(true); return; }
     Object.keys(localStorage).filter((k) => k.startsWith("amanora:")).forEach((k) => localStorage.removeItem(k));
     location.reload();
   };
@@ -321,6 +360,12 @@ export default function App() {
         <span className="row between"><small className="muted">{good.ref}</small><b className="gold">Read today's reflection →</b></span>
       </button>
 
+      <button className="daily" onClick={() => go("Umrah")}>
+        <small className="gold">🕋 UMRAH & HAJJ COMPANION</small>
+        <p>{umrahDays !== null && umrahDays > 0 ? `${umrahDays} day${umrahDays === 1 ? "" : "s"} until your journey` : "Tawaf and Sa'i counters, Hajj day-by-day, duas, Miqat guide and your trip planner."}</p>
+        <span className="row between"><small className="muted">Works fully inside Amanora</small><b className="gold">Open companion →</b></span>
+      </button>
+
       <div className="grid">
         {([
           ["Quran", "📖"], ["Stories", "📜"], ["Reels", "📚"], ["Listen", "🎧"], ["Hadith", "🕌"], ["Worship", "📿"], ["Learn", "🎓"], ["Quiz", "🧠"],
@@ -352,18 +397,7 @@ export default function App() {
         <span className="gold">›</span>
       </button>
 
-      <div className="card">
-        <div className="row between"><h3>Was today’s home helpful?</h3><small className="muted">Private feedback</small></div>
-        {homeFeedback ? (
-          <div className="row between"><span className="muted small">Thank you for sharing.</span><button className="chip" onClick={() => setHomeFeedback(null)}>Change answer</button></div>
-        ) : (
-          <div className="row gap-s">
-            <button className="chip" onClick={() => setHomeFeedback("yes")}>♡ Yes, helpful</button>
-            <button className="chip" onClick={() => setHomeFeedback("no")}>Not quite</button>
-          </div>
-        )}
-        <small className="muted">Your answer is saved only on this device.</small>
-      </div>
+      <KhatmPlanner />
 
       <DailyDua />
 
@@ -382,6 +416,9 @@ export default function App() {
         <h2>Explore</h2>
         <p className="muted">A place for remembrance, reflection and discovery.</p>
       </header>
+      <button className="hall" onClick={() => go("Umrah")}>
+        <span className="hall-icon">🕋</span><span className="grow"><b>Umrah & Hajj Companion</b><small>Tawaf and Sa'i counters, Hajj days, duas, Miqat, Ziyarah and trip planner</small></span><span className="gold">›</span>
+      </button>
       <DailyContentFeed />
       <button className="hall" onClick={() => go("Stories")}>
         <span className="hall-icon">📜</span><span className="grow"><b>Prophet Stories · English + Urdu audio</b><small>Quran references, lessons, bookmarks and human-narration audio slots.</small></span><span className="gold">›</span>
@@ -405,10 +442,6 @@ export default function App() {
       <button className="hall" onClick={() => go("Learn")}>
         <span className="hall-icon">🎓</span><span className="grow"><b>Islamic Learning</b><small>Continue your learning paths and lessons</small></span><span className="gold">›</span>
       </button>
-      <div className="card">
-        <small className="gold">A GENTLE REMINDER</small>
-        <p className="hadith-en">Take one small step today. Consistency in good deeds matters.</p>
-      </div>
     </div>
   );
 
@@ -456,7 +489,8 @@ export default function App() {
             {PRAYERS.map((prayer) => <label className="chip" key={prayer} style={{display:"inline-flex",alignItems:"center",gap:6}}><input type="checkbox" checked={azanPrefs[prayer] !== false} onChange={(e) => setAzanPrefs({ ...azanPrefs, [prayer]: e.target.checked })} />{prayer}</label>)}
           </div>
           <button className="chip" onClick={() => void testPrayerNotification()}>Test notification</button>
-          <small className="muted">The notification sound is controlled by your phone/browser. Full Azan audio at an exact time while the browser is completely closed needs a push-notification server and native platform support. This web version schedules reminders while Amanora is running.</small>
+          <button className={"toggle" + (azanSound ? " on" : "")} onClick={() => setAzanSound(!azanSound)}><span>Play Azan sound at prayer time</span><b>{azanSound ? "ON" : "OFF"}</b></button>
+          <div className="row gap-s"><button className="chip" onClick={() => playAzan(() => toast("Azan audio file not found. Add azan.mp3 to public/audio."))}>▶ Hear Azan</button><button className="chip" onClick={stopAzan}>■ Stop</button></div>
         </div>
         <button className="btn wide" onClick={locate}>{locating ? "مقام تلاش ہو رہا ہے…" : "📍 Update my location"}</button>
         {locErr && <p className="err">{locErr}</p>}
@@ -484,7 +518,8 @@ export default function App() {
       <div className="card">
         <h3>About Amanora</h3>
         <p className="muted small">Live data comes from Aladhan (prayer times), AlQuran Cloud and Islamic Network (Quran and recitation) and MP3Quran (radio and reciters). Everything you save stays on your device. There are no ads, no accounts and no tracking.</p>
-        <button className="chip danger-chip" onClick={resetAll}>Delete my saved data</button>
+        {confirmReset && <p className="err small">This deletes bookmarks, prayer log and journal on this device. Tap again to confirm.</p>}
+        <div className="row gap-s"><button className="chip danger-chip" onClick={resetAll}>{confirmReset ? "Yes, delete everything" : "Delete my saved data"}</button>{confirmReset && <button className="chip" onClick={() => setConfirmReset(false)}>Cancel</button>}</div>
       </div>
     </div>
   );
@@ -494,7 +529,7 @@ export default function App() {
     Quran: <Quran settings={s} />,
     Explore: explore,
     Learn: <Learn />,
-    Plus: <Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} onOpenBayan={() => go("Bayan")} />,
+    Plus: <><div className="screen" style={{ paddingBottom: 0 }}><AutoInsights onSubscribe={() => { setPaymentPlan("yearly"); go("Profile"); }} /></div><Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} onOpenBayan={() => go("Bayan")} /></>,
     Profile: me,
     Reels: <Reels />,
     Listen: <Listen />,
@@ -503,12 +538,14 @@ export default function App() {
     Worship: <Worship coords={coords} />,
     Quiz: <QuizSection />,
     Stories: <ProphetStories />,
+    Umrah: <UmrahCompanion />,
   };
 
   if (gate) return <Gate onDone={enter} />;
 
   return (
     <div className={"app" + (oled ? " oled-theme" : "")} data-language={language}>
+      {toastMsg && <div role="status" aria-live="polite" onClick={() => setToastMsg("")} style={{position:"fixed",left:12,right:12,bottom:84,zIndex:9999,padding:"12px 14px",borderRadius:14,background:"#0f3d33",color:"#fff",border:"1px solid #d4af37",fontSize:14,textAlign:"center"}}>{toastMsg}</div>}
       <main className="main">{screen[tab]}</main>
       <nav className="nav">
         {NAV.map((n) => (

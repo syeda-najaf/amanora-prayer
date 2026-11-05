@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import { useEffect, useMemo, useState } from 'react';
 import { dayOfYear, useStored } from '../lib';
 
@@ -42,7 +43,7 @@ export function ProphetStories(){
  const [speakingId,setSpeakingId]=useState('');
  useEffect(()=>()=>{ if ('speechSynthesis' in window) window.speechSynthesis.cancel(); },[]);
  const speakStory=(s:Story)=>{
-  if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance==='undefined') { window.alert('Audio narration is not supported in this browser. Please try the latest Chrome.'); return; }
+  if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance==='undefined') { toast('Audio narration is not supported in this browser. Please try the latest Chrome.'); return; }
   window.speechSynthesis.cancel();
   const text=audioLanguage==='en' ? `${s.prophet}. ${s.titleEn}. ${s.en}. Lesson: ${s.lessonEn}. Quran reference: ${s.ref}.` : `${s.prophet}. ${s.titleHi}. ${s.hi}. सीख: ${s.lessonHi}.`;
   const utterance=new SpeechSynthesisUtterance(text);

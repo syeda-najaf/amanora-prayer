@@ -97,6 +97,7 @@ export function OwnerStudio() {
   const [filter, setFilter] = useState<"all" | ContentStatus>("all");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [schedDraft, setSchedDraft] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
 
   const verifyAdmin = useCallback(
@@ -445,12 +446,7 @@ export function OwnerStudio() {
   ) {
     if (!client || !session || !isAdmin) return;
 
-    const confirmed = window.confirm(
-      `Change "${item.title}" to "${nextStatus}"?`
-    );
-
-    if (!confirmed) return;
-
+    
     setBusy(true);
     setError("");
     setNotice("");
@@ -504,12 +500,7 @@ export function OwnerStudio() {
   async function scheduleItem(item: ContentItem) {
     if (!client || !isAdmin) return;
 
-    const date = window.prompt(
-      "Enter the publication date and time in your local time (YYYY-MM-DDTHH:mm):",
-      item.publish_at
-        ? new Date(item.publish_at).toISOString().slice(0, 16)
-        : ""
-    );
+    const date = schedDraft[item.id] || "";
 
     if (!date) return;
 
@@ -1031,6 +1022,12 @@ export function OwnerStudio() {
                     >
                       Publish now
                     </button>
+                    <input
+                      type="datetime-local"
+                      aria-label="Publication date and time"
+                      value={schedDraft[item.id] || ""}
+                      onChange={(e) => setSchedDraft({ ...schedDraft, [item.id]: e.target.value })}
+                    />
                     <button onClick={() => void scheduleItem(item)}>
                       Schedule
                     </button>

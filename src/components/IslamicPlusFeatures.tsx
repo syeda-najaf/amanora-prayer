@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import React, { useState } from 'react';
 import { AllahName, HisnulDua } from '../types';
 import { IslamicButton } from './IslamicButton';
@@ -350,7 +351,7 @@ export const IslamicPlusFeatures: React.FC<IslamicPlusFeaturesProps> = ({
               size="md"
               arabicFlourish={true}
               onClick={() => {
-                alert(`Your calculated Zakat due is $${zakatDue.toFixed(2)}. May Allah accept your purification and charity!`);
+                toast(`Your calculated Zakat due is $${zakatDue.toFixed(2)}. May Allah accept your purification and charity!`);
               }}
               className="w-full"
             >
@@ -441,7 +442,7 @@ export const IslamicPlusFeatures: React.FC<IslamicPlusFeaturesProps> = ({
               size="md"
               arabicFlourish={true}
               onClick={() => {
-                alert("Streaming Makkah Al-Mukarramah Live 24/7.");
+                toast("Streaming Makkah Al-Mukarramah Live 24/7.");
               }}
               className="w-full"
             >

@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import React, { useState } from 'react';
 import { HadithItem } from '../types';
 import { IslamicButton } from './IslamicButton';
@@ -35,7 +36,7 @@ export const HadithOfTheDay: React.FC<HadithOfTheDayProps> = ({
     }
 
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert("Speech synthesis is not supported on your device.");
+      toast("Speech synthesis is not supported on your device.");
       return;
     }
 

@@ -15,6 +15,7 @@ export interface Surah {
   englishNameTranslation: string;
   numberOfAyahs: number;
   name: string;
+  revelationType?: string;
 }
 
 export interface Ayah {
@@ -22,7 +23,9 @@ export interface Ayah {
   numberInSurah: number;
   text: string;
   page: number;
-  surah?: { number: number; englishName: string; name: string };
+  juz?: number;
+  manzil?: number;
+  surah?: { number: number; englishName: string; name: string; numberOfAyahs?: number; revelationType?: string };
 }
 
 export interface Coords { lat: number; lon: number; city: string }

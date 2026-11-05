@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import { useEffect, useMemo, useState } from "react";
 import { AUTHENTIC_HADITHS } from "../data/hadiths";
 import { DAILY_GOOD, STORIES } from "../data/content";
@@ -28,7 +29,7 @@ export function DailyAutoPilot({ onOpen }: Props) {
 
   const speak = (text: string) => {
     if (!("speechSynthesis" in window)) {
-      alert("Audio narration is not supported by this browser. Try the latest Chrome or Edge.");
+      toast("Audio narration is not supported by this browser. Try the latest Chrome or Edge.");
       return;
     }
     window.speechSynthesis.cancel();

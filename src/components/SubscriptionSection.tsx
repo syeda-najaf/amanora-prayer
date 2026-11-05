@@ -1,3 +1,4 @@
+import { toast } from "../lib";
 import React, { useState } from 'react';
 import { 
   SubscriptionPlanId, 
@@ -428,7 +429,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
 
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <button
-                onClick={() => alert(`Certificate successfully generated for ${userName}! You can save or print this blessing.`)}
+                onClick={() => toast(`Certificate successfully generated for ${userName}! You can save or print this blessing.`)}
                 className="px-4 py-2 rounded-xl bg-[#1C4E40] text-white text-xs font-bold flex items-center gap-1.5 hover:bg-[#143B30] transition-colors shadow-xs"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -472,7 +473,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
                     {kit.pages}
                   </span>
                   <button
-                    onClick={() => alert(`Downloaded "${kit.title}"! Enjoy wholesome offline family activity.`)}
+                    onClick={() => toast(`Downloaded "${kit.title}"! Enjoy wholesome offline family activity.`)}
                     className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1"
                   >
                     <Download className="w-3.5 h-3.5" />

@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type LocalTrack = { id: string; name: string; url: string };
-type StoredTrack = { id: string; name: string; blob: Blob; addedAt: number };
 type BayanItem = { id: string; title: string; speaker: string; duration: string; topic: string; language: "en" | "ur"; date: string; description: string; url: string; featured?: boolean };
 
 // These are links to the speaker's listed audio publisher. Amanora does not re-host these recordings.
@@ -14,39 +12,6 @@ const BAYANS: BayanItem[] = [
   { id: "connection", title: "Connecting to Allah Through the Sunnah", speaker: "Mufti Menk", duration: "28:16", topic: "Sunnah", language: "en", date: "27 Jul", description: "A lecture about gratitude and strengthening faith through the Sunnah.", url: "https://muslimcentral.com/mufti-menk-new-connecting-to-allah-through-the-sunnah" },
 ];
 const TOPICS = ["All", "Faith", "Akhirah", "Character", "Sunnah"];
-const AUDIO_DB = "amanora-personal-audio";
-const AUDIO_STORE = "tracks";
-function openAudioDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (!("indexedDB" in window)) return reject(new Error("This browser does not support saved audio storage."));
-    const request = indexedDB.open(AUDIO_DB, 1);
-    request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains(AUDIO_STORE)) request.result.createObjectStore(AUDIO_STORE, { keyPath: "id" }); };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Could not open audio storage."));
-  });
-}
-async function getStoredTracks(): Promise<StoredTrack[]> {
-  const db = await openAudioDb();
-  return new Promise((resolve, reject) => {
-    const request = db.transaction(AUDIO_STORE, "readonly").objectStore(AUDIO_STORE).getAll();
-    request.onsuccess = () => { db.close(); resolve((request.result as StoredTrack[]).sort((a,b) => a.addedAt-b.addedAt)); };
-    request.onerror = () => { db.close(); reject(request.error); };
-  });
-}
-async function putStoredTrack(track: StoredTrack): Promise<void> {
-  const db = await openAudioDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(AUDIO_STORE, "readwrite"); tx.objectStore(AUDIO_STORE).put(track);
-    tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error); }; tx.onabort = () => { db.close(); reject(tx.error); };
-  });
-}
-async function deleteStoredTrack(id: string): Promise<void> {
-  const db = await openAudioDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(AUDIO_STORE, "readwrite"); tx.objectStore(AUDIO_STORE).delete(id);
-    tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error); };
-  });
-}
 const read = <T,>(key: string, fallback: T): T => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) as T : fallback; } catch { return fallback; } };
 const save = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage may be unavailable */ } };
 
@@ -57,84 +22,26 @@ export function BayanLibrary() {
   const [favorites, setFavorites] = useState<string[]>(() => read("amanora:bayan-favorites", []));
   const [recent, setRecent] = useState<string[]>(() => read("amanora:bayan-recent", []));
   const [queue, setQueue] = useState<string[]>(() => read("amanora:bayan-queue", []));
-  const [localTracks, setLocalTracks] = useState<LocalTrack[]>([]);
-  const [audioBusy, setAudioBusy] = useState(false);
-  const [playing, setPlaying] = useState("");
-  const [speed, setSpeed] = useState("1");
-  const [sleep, setSleep] = useState("off");
-  const [message, setMessage] = useState("");
   const [selectedBayan, setSelectedBayan] = useState<BayanItem | null>(null);
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const timer = useRef<number | null>(null);
   const isUrdu = language === "ur";
 
   useEffect(() => { save("amanora:bayan-favorites", favorites); }, [favorites]);
   useEffect(() => { save("amanora:bayan-recent", recent); }, [recent]);
   useEffect(() => { save("amanora:bayan-queue", queue); }, [queue]);
-  useEffect(() => { if (audio.current) audio.current.playbackRate = Number(speed); }, [speed]);
-  useEffect(() => { if (timer.current) window.clearTimeout(timer.current); if (sleep !== "off") timer.current = window.setTimeout(() => { audio.current?.pause(); setPlaying(""); setMessage("Sleep timer finished."); }, Number(sleep) * 60000); return () => { if (timer.current) window.clearTimeout(timer.current); }; }, [sleep]);
-  useEffect(() => {
-    let cancelled = false;
-    getStoredTracks().then(rows => {
-      if (cancelled) return;
-      setLocalTracks(rows.map(row => ({ id: row.id, name: row.name, url: URL.createObjectURL(row.blob) })));
-    }).catch(error => setMessage(error instanceof Error ? error.message : "Could not restore your audio shelf."));
-    return () => { cancelled = true; audio.current?.pause(); localTracks.forEach(t => URL.revokeObjectURL(t.url)); };
-  // Load once on mount; object URLs are revoked on unmount and when a track is removed.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const filtered = useMemo(() => BAYANS.filter(b => (topic === "All" || b.topic === topic) && (language === "en" ? b.language === "en" : b.language === "ur") && `${b.title} ${b.speaker} ${b.topic}`.toLowerCase().includes(query.toLowerCase())), [topic, query, language]);
   const toggle = (id: string) => setFavorites(old => old.includes(id) ? old.filter(x => x !== id) : [...old, id]);
   const markRecent = (id: string) => setRecent(old => [id, ...old.filter(x => x !== id)].slice(0, 12));
   const openBayan = (b: BayanItem) => { markRecent(b.id); setSelectedBayan(b); };
   const addQueue = (id: string) => setQueue(old => old.includes(id) ? old : [...old, id]);
-  const playLocal = (track: LocalTrack) => {
-    if (!audio.current) audio.current = new Audio();
-    const player = audio.current;
-    if (playing === track.name) { player.pause(); setPlaying(""); return; }
-    player.pause(); player.src = track.url; player.playbackRate = Number(speed);
-    player.onended = () => setPlaying("");
-    player.onerror = () => { setMessage("This file could not be played. Please choose an MP3 audio file."); setPlaying(""); };
-    player.play().then(() => { setPlaying(track.name); setMessage("Playing your selected audio on this device."); }).catch(() => setMessage("Tap play again to start audio."));
-  };
-  const importAudio = async (files: FileList | null) => {
-    if (!files?.length) return;
-    const valid = Array.from(files).filter(file => file.type.startsWith("audio/"));
-    if (!valid.length) { setMessage("Choose a supported audio file, such as MP3, M4A, WAV or OGG."); return; }
-    const total = valid.reduce((sum, file) => sum + file.size, 0);
-    if (total > 200 * 1024 * 1024) { setMessage("Please import up to 200 MB of audio at a time."); return; }
-    setAudioBusy(true); setMessage("Saving your audio on this device…");
-    try {
-      const added: LocalTrack[] = [];
-      for (const file of valid) {
-        const id = `${file.name}-${file.lastModified}-${file.size}`;
-        await putStoredTrack({ id, name: file.name, blob: file, addedAt: Date.now() });
-        added.push({ id, name: file.name, url: URL.createObjectURL(file) });
-      }
-      setLocalTracks(old => [...old.filter(track => !added.some(item => item.id === track.id)), ...added]);
-      setMessage(`${added.length} audio file(s) saved. They will remain after refresh on this device.`);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Storage is full or unavailable. Try fewer or smaller files.");
-    } finally { setAudioBusy(false); }
-  };
-  const removeLocalTrack = async (track: LocalTrack) => {
-    try {
-      await deleteStoredTrack(track.id);
-      URL.revokeObjectURL(track.url);
-      setLocalTracks(old => old.filter(item => item.id !== track.id));
-      if (playing === track.name) { audio.current?.pause(); setPlaying(""); }
-      setMessage("Audio removed from this device.");
-    } catch { setMessage("Could not remove this audio file. Please try again."); }
-  };
 
   return <div className="screen bayan-screen" dir={isUrdu ? "rtl" : "ltr"}>
     <header className="bayan-hero">
       <div className="bayan-orbit">۞</div>
       <span className="kicker">AMANORA AUDIO SANCTUARY</span>
       <h2>{isUrdu ? "بیان کی دنیا" : "The Bayan Library"}</h2>
-      <p>{isUrdu ? "مکمل بیانات، محفوظ فہرستیں اور آپ کی اپنی آڈیو لائبریری۔" : "Long-form Islamic reminders, organised listening and your personal audio space."}</p>
-      <div className="bayan-hero-meta"><span>🎧 Full-length talks</span><span>♡ Personal library</span><span>⏱ Listening tools</span></div>
+      <p>{isUrdu ? "مکمل بیانات، محفوظ فہرستیں ۔" : "Long-form Islamic reminders and organised listening."}</p>
+      <div className="bayan-hero-meta"><span>🎧 Full-length talks</span><span>♡ Saved talks</span></div>
     </header>
 
     <div className="bayan-toolbar card">
@@ -147,7 +54,7 @@ export function BayanLibrary() {
       <section className="bayan-feature card"><div className="bayan-feature-art"><span>﷽</span><small>FEATURED SERIES</small></div><div className="bayan-feature-copy"><span className="kicker">FULL LECTURE · MUFTI MENK</span><h3>Peace in Islam</h3><p className="muted small">44 minutes of reflection on peace, character and how we treat others.</p><button className="btn wide" onClick={() => openBayan(BAYANS[0])}>▶ Play inside Amanora</button><small className="tiny-note">The publisher player opens here inside the Amanora screen.</small></div></section>
       <div className="row between"><h3>Explore full Bayans</h3><span className="pill">{filtered.length} talks</span></div>
       <div className="bayan-list">{filtered.map(b => <article className="bayan-item card" key={b.id}><div className="bayan-cover">{b.topic === "Akhirah" ? "🌙" : b.topic === "Sunnah" ? "۞" : b.topic === "Character" ? "🌿" : "🤍"}</div><div className="bayan-item-main"><div className="row between"><span className="pill">{b.topic}</span><span className="muted tiny">{b.duration}</span></div><h4>{b.title}</h4><p className="muted tiny">{b.speaker} · {b.date}</p><p className="muted small">{b.description}</p><div className="row gap-s wrap"><button className="btn" onClick={() => openBayan(b)}>▶ Play in app</button><button className="chip" onClick={() => toggle(b.id)}>{favorites.includes(b.id) ? "♥ Saved" : "♡ Save"}</button><button className="chip" onClick={() => addQueue(b.id)}>{queue.includes(b.id) ? "✓ Queued" : "+ Queue"}</button></div></div></article>)}</div>
-      {filtered.length === 0 && <div className="card center"><h3>Urdu collection is being curated</h3><p className="muted small">We are preparing Urdu-language full Bayans with clear speaker attribution and permission checks. You can add recordings you own below.</p><button className="chip" onClick={() => setLanguage("ur")}>View Urdu collection</button></div>}
+      {filtered.length === 0 && <div className="card center"><h3>Urdu collection is being curated</h3><p className="muted small">We are preparing Urdu-language full Bayans with clear speaker attribution and permission checks. </p><button className="chip" onClick={() => setLanguage("ur")}>View Urdu collection</button></div>}
     </> : <section className="card bayan-urdu-empty"><div className="bayan-urdu-mark">اردو</div><h3>اردو بیانات کی لائبریری</h3><p className="muted">Urdu full-length recordings will appear here after their source and reuse permissions are checked. We will not fill this shelf with copied or unverified recordings.</p><button className="chip" onClick={() => setLanguage("en")}>Browse English full Bayans</button></section>}
 
     {selectedBayan && <section className="card bayan-inline-player" aria-label="In-app Bayan player">
@@ -155,12 +62,6 @@ export function BayanLibrary() {
       <div className="bayan-embed-frame"><iframe key={selectedBayan.id} src={selectedBayan.url} title={`${selectedBayan.title} by ${selectedBayan.speaker}`} loading="lazy" allow="autoplay; encrypted-media" referrerPolicy="strict-origin-when-cross-origin" /></div>
       <p className="tiny-note">Playback is displayed inside this screen and streamed by the original publisher. Amanora does not download, re-upload or claim ownership of the recording. If the publisher blocks embedded playback, its player cannot be forced to play inside a third-party app.</p>
     </section>}
-
-    <section className="card"><div className="row between"><div><span className="kicker">YOUR PERSONAL AUDIO</span><h3>My audio shelf</h3></div><span className="plus-icon">🎼</span></div><p className="muted small">Select recordings that you own or have permission to use. They are saved privately on this device and are not uploaded.</p><label className={`btn wide bayan-upload ${audioBusy ? "disabled" : ""}`}>＋ {audioBusy ? "Saving audio…" : "Add my audio files"}<input type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav" multiple disabled={audioBusy} onChange={e => void importAudio(e.target.files)} /></label>
-      {localTracks.map(t => <div className="list-row" key={t.id}><button className="round" onClick={() => playLocal(t)}>{playing === t.name ? "Ⅱ" : "▶"}</button><span className="grow"><b>{t.name}</b><small>Personal file · saved on this device</small></span><button className="chip" onClick={() => void removeLocalTrack(t)}>Remove</button></div>)}
-      {message && <p className="tiny-note">{message}</p>}
-      {localTracks.length > 0 && <div className="bayan-player-tools"><label>Speed <select className="input" value={speed} onChange={e => setSpeed(e.target.value)}><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><label>Sleep timer <select className="input" value={sleep} onChange={e => setSleep(e.target.value)}><option value="off">Off</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option></select></label><button className="chip" onClick={() => { audio.current?.pause(); setPlaying(""); }}>Stop audio</button></div>}
-    </section>
 
     <section className="bayan-library-grid"><div className="card"><h3>♡ Saved Bayans</h3><p className="muted small">Your saved talks stay on this device.</p>{favorites.length ? favorites.map(id => { const b = BAYANS.find(x=>x.id===id); return b ? <button className="lesson-row" key={id} onClick={()=>openBayan(b)}><span className="grow"><b>{b.title}</b><small>{b.speaker} · {b.duration}</small></span><span>▶</span></button> : null; }) : <p className="tiny-note">Save a talk to build your listening list.</p>}</div><div className="card"><h3>◷ Recently played</h3>{recent.length ? recent.map(id => { const b = BAYANS.find(x=>x.id===id); return b ? <button className="lesson-row" key={id} onClick={()=>openBayan(b)}><span className="grow"><b>{b.title}</b><small>{b.duration}</small></span><span>▶</span></button> : null; }) : <p className="tiny-note">Your listening history will appear here.</p>}</div><div className="card"><h3>☷ Up next</h3>{queue.length ? queue.map(id => { const b = BAYANS.find(x=>x.id===id); return b ? <div className="lesson-row" key={id}><span className="grow"><b>{b.title}</b><small>{b.duration}</small></span><button className="chip" onClick={()=>setQueue(old=>old.filter(x=>x!==id))}>Remove</button></div> : null; }) : <p className="tiny-note">Add talks to your queue for your next listening session.</p>}</div></section>
 
