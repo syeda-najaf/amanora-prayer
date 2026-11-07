@@ -17,3 +17,9 @@ android/.idea/
 PLUS-PRIVATE-KEY.json
 android/keystore.properties
 keys/
+
+# Amanora private Android signing keys
+android/amanora-release.jks
+android/keystore.properties
+*.jks
+*.keystore
