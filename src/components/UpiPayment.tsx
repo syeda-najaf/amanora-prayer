@@ -23,7 +23,7 @@ function formatINR(value: number) {
   }).format(value);
 }
 
-export default function UpiPayment({ initialPlan = "monthly" }: { initialPlan?: "monthly" | "yearly" }) {
+export default function UpiPayment({ initialPlan = "monthly", accountEmail = "" }: { initialPlan?: "monthly" | "yearly"; accountEmail?: string }) {
   const [plan, setPlan] = useState<Plan>(initialPlan);
   useEffect(() => { setPlan(initialPlan); }, [initialPlan]);
   const [customAmount, setCustomAmount] = useState("101");
@@ -49,10 +49,10 @@ export default function UpiPayment({ initialPlan = "monthly" }: { initialPlan?: 
       pn: PAYEE_NAME,
       am: validAmount ? amount.toFixed(2) : "0.00",
       cu: "INR",
-      tn: `Amanora - ${PLANS[plan].name}`,
+      tn: `Amanora ${plan === "support" ? "support" : plan} ${accountEmail}`.trim().slice(0, 50),
     });
     return `upi://pay?${params.toString()}`;
-  }, [amount, plan, validAmount]);
+  }, [amount, plan, validAmount, accountEmail]);
 
   const selectPlan = (nextPlan: Plan) => {
     setPlan(nextPlan);
@@ -105,7 +105,7 @@ export default function UpiPayment({ initialPlan = "monthly" }: { initialPlan?: 
       setNotice("Check the UPI ID and payment amount first.");
       return;
     }
-    const text = `Amanora Prayer payment\nPlan: ${PLANS[plan].name}\nAmount: ${formatINR(amount)}\nUPI ID: ${UPI_ID}`;
+    const text = `Amanora Prayer payment\nPlan: ${PLANS[plan].name}\nAmount: ${formatINR(amount)}\nUPI ID: ${UPI_ID}${accountEmail ? `\nMy Amanora account: ${accountEmail}` : ""}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "Amanora payment details", text });

@@ -25,6 +25,9 @@ import { DailyContentFeed } from "./components/DailyContentFeed";
 import { KhatmPlanner } from "./components/KhatmPlanner";
 import { UmrahCompanion } from "./components/UmrahCompanion";
 import { AutoInsights } from "./components/AutoInsights";
+import { PlusUnlock } from "./components/PlusUnlock";
+import { AccountCard } from "./components/AccountCard";
+import { useSession } from "./services/auth";
 
 type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Bayan" | "Hadith" | "Worship" | "Quiz" | "Stories" | "Umrah";
 
@@ -58,12 +61,47 @@ function playAzan(onFail?: () => void) {
 }
 function stopAzan() { try { azanAudio?.pause(); azanAudio = null; } catch { /* ignore */ } }
 
+function readPrayerTimesCache(day: Date, coords: Coords | null, method: number): PrayerTime[] {
+  if (!coords) return [];
+  try {
+    const raw = localStorage.getItem(`amanora:prayer-times:${dateKey(day)}`);
+    if (!raw) return [];
+    const cached = JSON.parse(raw) as { lat: number; lon: number; method: number; times: Array<{ name: string; date: string }> };
+    if (cached.lat !== coords.lat || cached.lon !== coords.lon || cached.method !== method) return [];
+    return cached.times.map((item) => ({ name: item.name, date: new Date(item.date) }))
+      .filter((item) => !Number.isNaN(item.date.getTime()));
+  } catch { return []; }
+}
+
+function savePrayerTimesCache(day: Date, times: PrayerTime[], coords: Coords, method: number) {
+  try {
+    localStorage.setItem(`amanora:prayer-times:${dateKey(day)}`, JSON.stringify({
+      lat: coords.lat, lon: coords.lon, method, times
+    }));
+  } catch { /* local cache is best-effort */ }
+}
+
 async function ensureChannels() {
   if (Capacitor.getPlatform() !== "android") return;
   try {
-    await LocalNotifications.createChannel({ id: "azan-v1", name: "Azan at prayer time", description: "Plays the Azan when it is time for Salah", importance: 5, visibility: 1, sound: "azan.mp3", vibration: true });
-    await LocalNotifications.createChannel({ id: "reminder-v1", name: "Prayer reminders", description: "Standard notification sound", importance: 4, visibility: 1, vibration: true });
+    await LocalNotifications.createChannel({ id: "azan-v2", name: "Azan at prayer time", description: "Plays the Azan when it is time for Salah", importance: 5, visibility: 1, sound: "azan.mp3", vibration: true });
+    await LocalNotifications.createChannel({ id: "reminder-v2", name: "Prayer reminders", description: "Standard notification sound", importance: 4, visibility: 1, vibration: true });
   } catch (error) { console.warn("Amanora notification channels could not be created", error); }
+}
+
+async function guideExactAlarmAccess() {
+  if (Capacitor.getPlatform() !== "android") return;
+  try {
+    const current = await LocalNotifications.checkExactNotificationSetting();
+    if (current.exact_alarm !== "granted") {
+      const updated = await LocalNotifications.changeExactNotificationSetting();
+      if (updated.exact_alarm !== "granted") {
+        toast("Android may delay reminders unless Alarms & reminders access is allowed for Amanora.");
+      }
+    }
+  } catch (error) {
+    console.warn("Amanora exact-alarm access could not be checked", error);
+  }
 }
 
 export default function App() {
@@ -80,9 +118,12 @@ export default function App() {
   const [paymentPlan, setPaymentPlan] = useState<"monthly" | "yearly">("monthly");
   const [homeWidgets, setHomeWidgets] = useStored<string[]>("home-widgets", ["Quran", "Stories", "Reels", "Listen", "Hadith", "Worship", "Learn", "Quiz"]);
 
+  const { session: authSession } = useSession();
   const [azanSound, setAzanSound] = useStored<boolean>("azan-sound", true);
   const [azanPrefs, setAzanPrefs] = useStored<Record<string, boolean>>("azan-prayer-prefs", { Fajr: true, Dhuhr: true, Asr: true, Maghrib: true, Isha: true });
-  const [times, setTimes] = useState<PrayerTime[]>([]);
+  const [quranReminderEnabled, setQuranReminderEnabled] = useStored<boolean>("quran-reminder-enabled", false);
+  const [quranReminderTime, setQuranReminderTime] = useStored<string>("quran-reminder-time", "20:00");
+  const [times, setTimes] = useState<PrayerTime[]>(() => readPrayerTimesCache(new Date(), coords, settings.method ?? DEFAULTS.method));
   const [hijri, setHijri] = useState("");
   const [timesErr, setTimesErr] = useState("");
   const [locating, setLocating] = useState(false);
@@ -154,8 +195,9 @@ export default function App() {
     if (!coords) return;
     let alive = true;
     setTimesErr("");
+    setTimes(readPrayerTimesCache(new Date(), coords, s.method));
     fetchTimings(coords, s.method, new Date())
-      .then((r) => { if (alive) { setTimes(r.times); setHijri(r.hijri); } })
+      .then((r) => { if (alive) { setTimes(r.times); setHijri(r.hijri); savePrayerTimesCache(new Date(), r.times, coords, s.method); } })
       .catch(() => { if (alive) setTimesErr("Could not load prayer times. Check your internet connection."); });
     return () => { alive = false; };
     // eslint-disable-next-line
@@ -200,9 +242,17 @@ export default function App() {
         // replaces this rolling window, avoiding a single fragile next-prayer alarm.
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowResult = await fetchTimings(coords, s.method, tomorrow);
+        let tomorrowTimes: PrayerTime[] = [];
+        try {
+          const tomorrowResult = await fetchTimings(coords, s.method, tomorrow);
+          tomorrowTimes = tomorrowResult.times;
+          savePrayerTimesCache(tomorrow, tomorrowTimes, coords, s.method);
+        } catch {
+          // Reuse previously downloaded timings if the phone is offline.
+          tomorrowTimes = readPrayerTimesCache(tomorrow, coords, s.method);
+        }
         if (cancelled) return;
-        const upcoming = [...times, ...tomorrowResult.times]
+        const upcoming = [...times, ...tomorrowTimes]
           .filter((prayer) => azanPrefs[prayer.name] !== false && prayer.date.getTime() > Date.now())
           .sort((a, b) => a.date.getTime() - b.date.getTime());
         if (!upcoming.length) return;
@@ -212,7 +262,7 @@ export default function App() {
             title: `It's time for ${prayer.name} Salah`,
             body: "Amanora prayer reminder 🤲",
             schedule: { at: prayer.date, allowWhileIdle: true },
-            channelId: azanSound ? "azan-v1" : "reminder-v1",
+            channelId: azanSound ? "azan-v2" : "reminder-v2",
             sound: azanSound ? "azan.mp3" : undefined,
             extra: { prayer: prayer.name, source: "amanora-prayer-times" }
           }))
@@ -222,6 +272,52 @@ export default function App() {
     void schedule();
     return () => { cancelled = true; if (webTimer !== undefined) window.clearTimeout(webTimer); };
   }, [times, s.notify, azanPrefs, azanSound, today, coords, s.method, resumeTick]);
+
+  // Daily Quran reminders are scheduled as native local notifications.
+  // They do not need internet after the schedule has been created.
+  useEffect(() => {
+    let cancelled = false;
+    let webTimer: number | undefined;
+    const firstId = 52000;
+    const scheduleQuran = async () => {
+      if (!Capacitor.isNativePlatform()) {
+        if (!quranReminderEnabled || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+        const [webHour, webMinute] = quranReminderTime.split(":").map(Number);
+        const nextReminder = new Date();
+        nextReminder.setHours(webHour, webMinute, 0, 0);
+        if (nextReminder.getTime() <= Date.now()) nextReminder.setDate(nextReminder.getDate() + 1);
+        webTimer = window.setTimeout(() => notifyUser("A little time with the Quran", "Your daily Quran reading reminder from Amanora."), nextReminder.getTime() - Date.now());
+        return;
+      }
+      try {
+        const ids = Array.from({ length: 30 }, (_, index) => firstId + index);
+        await LocalNotifications.cancel({ notifications: ids.map((id) => ({ id })) });
+        if (!quranReminderEnabled) return;
+        const permission = await LocalNotifications.checkPermissions();
+        if (permission.display !== "granted") return;
+        const [hour, minute] = quranReminderTime.split(":").map(Number);
+        if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) return;
+        const notifications = Array.from({ length: 30 }, (_, index) => {
+          const at = new Date();
+          at.setDate(at.getDate() + index);
+          at.setHours(hour, minute, 0, 0);
+          return at.getTime() > Date.now() ? {
+            id: firstId + index,
+            title: "A little time with the Quran",
+            body: "Your daily Quran reading reminder from Amanora.",
+            schedule: { at, allowWhileIdle: true },
+            channelId: "reminder-v2",
+            extra: { source: "amanora-quran-reminder" }
+          } : null;
+        }).filter((item): item is NonNullable<typeof item> => item !== null);
+        if (!cancelled && notifications.length) await LocalNotifications.schedule({ notifications });
+      } catch (error) {
+        console.warn("Amanora Quran reminders could not be scheduled", error);
+      }
+    };
+    void scheduleQuran();
+    return () => { cancelled = true; if (webTimer !== undefined) window.clearTimeout(webTimer); };
+  }, [quranReminderEnabled, quranReminderTime, resumeTick]);
 
   /* ---- prayer log and streak (real, from what you tick) ---- */
   const doneToday = log[today] || [];
@@ -252,8 +348,10 @@ export default function App() {
       if (Capacitor.isNativePlatform()) {
         let permission = await LocalNotifications.checkPermissions();
         if (permission.display !== "granted") permission = await LocalNotifications.requestPermissions();
-        if (permission.display === "granted") setSettings({ ...s, notify: true });
-        else toast("Allow notifications for Amanora in your phone settings.");
+        if (permission.display === "granted") {
+          await guideExactAlarmAccess();
+          setSettings({ ...s, notify: true });
+        } else toast("Allow notifications for Amanora in your phone settings.");
         return;
       }
       if (typeof Notification === "undefined") { toast("This browser does not support notifications."); return; }
@@ -262,6 +360,39 @@ export default function App() {
       else toast("Notifications are blocked. Allow them in your browser settings.");
     } catch { toast("Could not enable notifications. Please check Amanora's notification permission in Settings."); }
   };
+  const toggleQuranReminder = async () => {
+    if (quranReminderEnabled) {
+      setQuranReminderEnabled(false);
+      return;
+    }
+    try {
+      if (Capacitor.isNativePlatform()) {
+        let permission = await LocalNotifications.checkPermissions();
+        if (permission.display !== "granted") permission = await LocalNotifications.requestPermissions();
+        if (permission.display !== "granted") {
+          toast("Allow notifications for Amanora in your phone settings.");
+          return;
+        }
+        await ensureChannels();
+        await guideExactAlarmAccess();
+        setQuranReminderEnabled(true);
+        toast("Your daily Quran reminder is enabled on this device.");
+        return;
+      }
+      if (typeof Notification === "undefined") {
+        toast("This browser does not support notifications.");
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        setQuranReminderEnabled(true);
+        toast("Quran reminders can appear while Amanora is open. Install the Android app for scheduled offline reminders.");
+      } else toast("Allow notifications in your browser settings.");
+    } catch {
+      toast("Could not enable Quran reminders. Check notification permission in Settings.");
+    }
+  };
+
   const testPrayerNotification = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
@@ -277,7 +408,7 @@ export default function App() {
             title: "Amanora test reminder",
             body: "Your prayer reminder notifications are working on this device. 🤲",
             schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true },
-            channelId: azanSound ? "azan-v1" : "reminder-v1",
+            channelId: azanSound ? "azan-v2" : "reminder-v2",
             sound: azanSound ? "azan.mp3" : undefined,
           }],
         });
@@ -452,6 +583,8 @@ export default function App() {
         <h2>Profile</h2>
       </header>
 
+      <AccountCard />
+
       <div className="stats">
         <div><b>{streak}</b><small>Day streak</small></div>
         <div><b>{totalPrayers}</b><small>Prayers logged</small></div>
@@ -483,6 +616,16 @@ export default function App() {
           <span>Prayer-time reminders</span><b>{s.notify ? "ON" : "OFF"}</b>
         </button>
         <small className="muted">Prayer reminders use your calculated local Salah times. Allow notifications when prompted.</small>
+        <div className="card" style={{ gap: 10, background: "var(--panel2)" }}>
+          <div className="row between">
+            <span><b>Daily Quran reminder</b><small className="muted" style={{ display: "block" }}>A scheduled reminder, even without internet on Android</small></span>
+            <button className={"chip" + (quranReminderEnabled ? " on" : "")} onClick={() => void toggleQuranReminder()}>{quranReminderEnabled ? "ON" : "OFF"}</button>
+          </div>
+          <label>Reminder time
+            <input className="input" type="time" value={quranReminderTime} onChange={(e) => setQuranReminderTime(e.target.value)} />
+          </label>
+          <small className="muted">On Android, Amanora schedules the next 30 daily reminders on your device. Open Amanora occasionally to refresh the schedule.</small>
+        </div>
         <div className="azan-settings">
           <b>Choose which Salah reminders you want</b>
           <div className="row gap-s wrap">
@@ -497,7 +640,7 @@ export default function App() {
         {installEvt && <button className="btn gold-btn wide" onClick={install}>⬇ Install Amanora on this device</button>}
       </div>
 
-      <UpiPayment initialPlan={paymentPlan} />
+      <UpiPayment initialPlan={paymentPlan} accountEmail={authSession?.user?.email ?? ""} />
 
       <div className="card">
         <h3>My journal</h3>
@@ -520,6 +663,12 @@ export default function App() {
         <p className="muted small">Live data comes from Aladhan (prayer times), AlQuran Cloud and Islamic Network (Quran and recitation) and MP3Quran (radio and reciters). Everything you save stays on your device. There are no ads, no accounts and no tracking.</p>
         {confirmReset && <p className="err small">This deletes bookmarks, prayer log and journal on this device. Tap again to confirm.</p>}
         <div className="row gap-s"><button className="chip danger-chip" onClick={resetAll}>{confirmReset ? "Yes, delete everything" : "Delete my saved data"}</button>{confirmReset && <button className="chip" onClick={() => setConfirmReset(false)}>Cancel</button>}</div>
+        <details className="card" style={{ marginTop: 10 }}>
+          <summary><b>Privacy Policy</b></summary>
+          <p className="small">Your bookmarks, prayer log, Quran progress, journal, settings and trip notes stay on your device. Amanora shows no ads and does not sell data.</p>
+          <p className="small">Location is used only to calculate prayer times and Qibla; coordinates go to the prayer-time service to return times. Reminders are scheduled on your device. Your account details (name, email, phone, city) and Plus status are stored with Supabase; you can delete your account in Profile. Quran text and audio come from alQuran Cloud, Quran.com and Islamic Network.</p>
+          <p className="small">Contact or request deletion: Syedanajaf832@gmail.com</p>
+        </details>
       </div>
     </div>
   );
@@ -529,7 +678,7 @@ export default function App() {
     Quran: <Quran settings={s} />,
     Explore: explore,
     Learn: <Learn />,
-    Plus: <><div className="screen" style={{ paddingBottom: 0 }}><AutoInsights onSubscribe={() => { setPaymentPlan("yearly"); go("Profile"); }} /></div><Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} onOpenBayan={() => go("Bayan")} /></>,
+    Plus: <><div className="screen" style={{ paddingBottom: 0 }}><PlusUnlock onPay={() => { setPaymentPlan("yearly"); go("Profile"); }} /><AutoInsights /></div><Plus log={log} oled={oled} onOledChange={setOled} homeWidgets={homeWidgets} onHomeWidgetsChange={setHomeWidgets} onOpenPayment={(plan) => { setPaymentPlan(plan); go("Profile"); }} onOpenListen={() => go("Listen")} onOpenBayan={() => go("Bayan")} /></>,
     Profile: me,
     Reels: <Reels />,
     Listen: <Listen />,

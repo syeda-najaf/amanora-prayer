@@ -1,0 +1,27 @@
+AMANORA PLUS UPDATE
+
+This is an update to the supplied Amanora Prayer project, not a replacement app.
+
+Included:
+- New Academy destination in the bottom navigation.
+- Guided learning paths for Salah, Quranic Arabic, Seerah and Tajweed listening.
+- Lesson completion tracking and short quizzes.
+- Hifz target list with practice-session logging.
+- Personal progress dashboard and weekly learning goal.
+- Local family accountability board.
+- Academy-only Garden, Night and Sand themes.
+- Explore links to Academy and the existing Learn module.
+- Existing prayer, Quran, audio, Hadith, Worship, Reels, Profile and UPI modules retained.
+
+Important limitations:
+- Academy, Hifz, family-board and theme data are saved only in this browser/device.
+- Family invitations/cloud sync are not implemented.
+- The Hifz tracker does not use AI and cannot grade recitation accuracy.
+- UPI checkout opens a UPI intent/QR. It does not verify a completed payment or activate Plus automatically.
+- Offline licensed audio, scholar-reviewed course certification and cloud membership entitlement need backend and content-rights work.
+
+Local commands:
+  npm install
+  npm run check
+  npm run build
+  npm run dev

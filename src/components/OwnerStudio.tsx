@@ -1,6 +1,7 @@
 ﻿
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { OwnerMembers } from "./OwnerMembers";
 import { supabase } from "../services/supabase";
 
 type ContentType =
@@ -686,6 +687,8 @@ export function OwnerStudio() {
 
       {error && <p className="owner-error owner-notice">{error}</p>}
       {notice && <p className="owner-muted owner-notice">{notice}</p>}
+
+      {client && <OwnerMembers client={client} />}
 
       <section className="owner-card">
         <p className="owner-eyebrow">

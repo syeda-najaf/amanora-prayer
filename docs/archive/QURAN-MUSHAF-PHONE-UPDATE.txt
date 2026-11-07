@@ -1,0 +1,18 @@
+AMANORA QURAN MUSHAF + PHONE RESPONSIVE UPDATE
+
+This update modifies the existing Quran component and its styles only.
+
+What changed:
+- Redesigned the Quran page as a printed Mushaf-inspired paper page with cream paper, fine double borders, ornamental header/footer, surah title panels and page number.
+- Added compact surah/translation controls and a responsive play/save/page navigation toolbar.
+- Added fluid Arabic typography and spacing for narrow phones, including safe-width layouts and smaller-screen adjustments.
+- Preserved the existing live Quran text/translation API, audio playback, surah picker, bookmarks, ayah selection and swipe navigation.
+
+Important accuracy note:
+This is a responsive Mushaf-inspired layout using the live page text API. It is not a facsimile of a specific printed Madinah Mushaf edition. Exact line breaks, calligraphic glyphs, ornamentation and page metadata vary by edition and require licensed/verified page scans or a matching Uthmani Mushaf font/data set.
+
+Run:
+  npm ci
+  npm run dev
+
+Test on phone widths around 360px, 375px, 390px and 430px. Confirm the selected translation, audio and page navigation work with internet access.

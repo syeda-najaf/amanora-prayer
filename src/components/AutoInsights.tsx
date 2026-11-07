@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { fetchMySubscription, isPlusActive } from "../services/entitlements";
+import { useEffect, useState } from "react";
+import { usePlus } from "../services/plusCodes";
 import { PRAYERS, dateKey, shareText } from "../lib";
 import { toast } from "../lib";
 
@@ -55,33 +55,24 @@ function analyse(): Report {
   return { score, lines, focus: focus.slice(0, 4) };
 }
 
-export function AutoInsights({ onSubscribe }: { onSubscribe: () => void }) {
-  const [state, setState] = useState<"checking" | "active" | "inactive">("checking");
+export function AutoInsights() {
+  const plus = usePlus();
   const [report, setReport] = useState<Report | null>(null);
   const [stamp, setStamp] = useState("");
 
-  const run = useCallback(async () => {
-    try {
-      const sub = await fetchMySubscription();
-      if (isPlusActive(sub)) { setState("active"); setReport(analyse()); setStamp(new Date().toLocaleString()); }
-      else { setState("inactive"); setReport(null); }
-    } catch { setState("inactive"); }
-  }, []);
-
   useEffect(() => {
-    void run();
-    const t = window.setInterval(() => { if (document.visibilityState === "visible") void run(); }, 60000);
-    const v = () => { if (document.visibilityState === "visible") void run(); };
-    document.addEventListener("visibilitychange", v);
-    return () => { window.clearInterval(t); document.removeEventListener("visibilitychange", v); };
-  }, [run]);
+    const run = () => { if (plus.active) { setReport(analyse()); setStamp(new Date().toLocaleString()); } else setReport(null); };
+    run();
+    const t = window.setInterval(() => { if (document.visibilityState === "visible") run(); }, 60000);
+    document.addEventListener("visibilitychange", run);
+    return () => { window.clearInterval(t); document.removeEventListener("visibilitychange", run); };
+  }, [plus.active]);
 
-  if (state === "checking") return <div className="card"><small className="muted">Checking your Amanora Plus status…</small></div>;
-  if (state === "inactive" || !report) return <div className="card">
+  if (plus.loading) return null;
+  if (!plus.active || !report) return <div className="card">
     <small className="gold">AMANORA PLUS · AUTO INSIGHTS</small>
     <h3>Your complete progress analysis</h3>
-    <p className="muted small">Once you subscribe, Amanora automatically analyses your prayers, Quran reading, learning and reflections across the whole app and builds your report here.</p>
-    <button className="btn" onClick={onSubscribe}>View plans</button>
+    <p className="muted small">With Plus, Amanora automatically analyses your prayers, Quran reading, learning and reflections across the whole app and builds your report here.</p>
   </div>;
 
   const text = `Amanora progress report (${stamp})\nOverall: ${report.score}/100\n` + report.lines.map((l) => `${l.title}: ${l.text}`).join("\n") + (report.focus.length ? "\nFocus:\n- " + report.focus.join("\n- ") : "");

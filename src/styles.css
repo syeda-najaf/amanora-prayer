@@ -797,3 +797,34 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-w
 .mf-pagebox .mf-head { width:100%; font-size:.62em; margin:0; }
 .mf-pagebox .mf-bismillah { width:100%; font-size:.78em; margin:0; padding:0 .6em; }
 .mf-footer { display:flex; justify-content:space-between; }
+
+/* Native-app feel once installed */
+html, body { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+body { -webkit-touch-callout: none; touch-action: manipulation; }
+body, button, .card, .chip, .btn, nav, header { -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable], .trans, .trans-row, .ayah-sheet p { -webkit-user-select: text; user-select: text; }
+::-webkit-scrollbar { width: 0; height: 0; }
+html { scrollbar-width: none; }
+.main { padding-top: max(var(--safe-t), 0px); }
+
+/* Plus locked sections */
+.plus-locked { position:relative; margin:12px 0; border-radius:16px; overflow:hidden; }
+.plus-locked-inner { filter:blur(4px) saturate(.7); pointer-events:none; user-select:none; max-height:230px; overflow:hidden; opacity:.75; }
+.plus-locked-badge { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); padding:12px 18px; border-radius:999px; border:1.5px solid #d4af37; background:#0f3d33; color:#fff; font-weight:700; font-size:14px; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+
+/* Registration / sign-in screen: fixed high-contrast colours (readable in any theme) */
+.auth-screen { min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:max(20px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom)); background:linear-gradient(160deg,#0e2b24,#14463a); overflow-y:auto; }
+.auth-card { width:100%; max-width:420px; background:#ffffff !important; color:#10231c !important; border-radius:20px; padding:22px 18px; box-shadow:0 18px 50px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:10px; }
+.auth-card h2 { margin:0; color:#0b3b2e !important; font-size:24px; }
+.auth-card p, .auth-card span, .auth-card label, .auth-card li { color:#2b3f37 !important; }
+.auth-card .muted { color:#4a5f56 !important; }
+.auth-card .gold { color:#8a6a0a !important; font-weight:700; }
+.auth-card .err { color:#b3261e !important; font-weight:600; }
+.auth-card .input { background:#ffffff !important; color:#10231c !important; border:1.5px solid #8fa89d !important; border-radius:12px; padding:12px 14px; font-size:16px; -webkit-text-fill-color:#10231c; opacity:1; }
+.auth-card .input::placeholder { color:#5f746b !important; -webkit-text-fill-color:#5f746b; opacity:1; }
+.auth-card .input:focus { outline:none; border-color:#0f6b52 !important; box-shadow:0 0 0 3px rgba(15,107,82,.18); }
+.auth-card .btn { background:#0f6b52 !important; color:#ffffff !important; border:0; border-radius:12px; padding:13px; font-size:16px; font-weight:700; }
+.auth-card .btn:disabled { opacity:.6; }
+.auth-card .chip { background:#eef5f1 !important; color:#0b3b2e !important; border:1px solid #b7cdc3 !important; }
+.auth-card input[type="checkbox"] { width:18px; height:18px; accent-color:#0f6b52; flex:none; margin-top:2px; }
+.auth-seal { font-size:38px; color:#b8921a; text-align:center; }

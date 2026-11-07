@@ -2,6 +2,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { OwnerStudio } from "./components/OwnerStudio";
+import { AuthGate } from "./components/AuthGate";
 import "./styles.css";
 
 // Capture Chrome's install event before React mounts. In production this event
@@ -27,7 +28,7 @@ window.addEventListener("appinstalled", () => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {window.location.pathname.replace(/\/+$/, "") === "/owner" ? <OwnerStudio /> : <App />}
+    {window.location.pathname.replace(/\/+$/, "") === "/owner" ? <OwnerStudio /> : <AuthGate><App /></AuthGate>}
   </StrictMode>
 );
 

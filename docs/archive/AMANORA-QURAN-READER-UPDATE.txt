@@ -1,0 +1,21 @@
+AMANORA QURAN READER UPDATE
+
+This update restyles the existing Quran reader to a traditional Mushaf-inspired page:
+- Deep green double border with gold detailing
+- Warm parchment page and decorative corner ornaments
+- Arabic Uthmani text from AlQuran Cloud, preserving the actual Quran text
+- Surah headings and Bismillah treatment
+- Page listening, individual ayah playback, translation panel, bookmarks
+- Page number jump, previous/next controls, and touch swipe navigation
+- Responsive mobile layout
+
+Important accuracy note:
+The app renders authentic Quran text fetched from AlQuran Cloud in a Mushaf-inspired responsive layout. It does not reproduce a licensed 15-line printed Mushaf scan or guarantee the exact line breaks of a specific printed edition. Internet is needed to fetch Quran pages and recitation audio.
+
+Run:
+  npm install
+  npm run check
+  npm run build
+  npm run dev
+
+Do not publish until the check and build commands pass on your machine.

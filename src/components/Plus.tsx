@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { Locked } from "./PlusUnlock";
+import { usePlus } from "../services/plusCodes";
 
 type PrayerLog = Record<string, string[]>;
 type Props = { log: PrayerLog; oled: boolean; onOledChange: (value: boolean) => void; homeWidgets: string[]; onHomeWidgetsChange: (value: string[]) => void; onOpenPayment: (plan: "monthly" | "yearly") => void; onOpenListen: () => void; onOpenBayan: () => void };
@@ -30,6 +32,8 @@ const readSaved = <T,>(key: string, fallback: T): T => { try { const raw = local
 const save = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage may be unavailable */ } };
 
 export function Plus({ log, oled, onOledChange, homeWidgets, onHomeWidgetsChange, onOpenPayment, onOpenListen, onOpenBayan }: Props) {
+  const plus = usePlus().active;
+  const unlock = () => window.scrollTo({ top: 0, behavior: "smooth" });
   const [completed, setCompleted] = useState<string[]>(() => readSaved("amanora:plus-lessons", []));
   const [challengeDone, setChallengeDone] = useState<string[]>(() => readSaved("amanora:plus-weekly-challenge", []));
   const [goals, setGoals] = useState<{ title: string; target: number; progress?: number }[]>(() => readSaved("amanora:plus-goals", [{ title: "Quran reading", target: 10, progress: 0 }, { title: "Learning minutes", target: 15, progress: 0 }]));
@@ -57,11 +61,11 @@ export function Plus({ log, oled, onOledChange, homeWidgets, onHomeWidgetsChange
     <header className="head plus-heading"><span className="kicker">A MORE PERSONAL WAY TO GROW</span><h2>Amanora <span>Plus</span></h2><p className="muted">A deeper learning journey with guided paths, weekly challenges and personal progress.</p></header>
     <section className="plus-hero"><div className="plus-orbit">✦</div><span className="plus-eyebrow">THE AMANORA PLUS EXPERIENCE</span><h3>Make space for meaningful growth.</h3><p>Structured learning, thoughtful progress tools and a calmer listening experience, all in one place.</p><div className="plus-pills"><span>Ad-free sanctuary</span><span>Personal progress</span><span>Family-friendly</span></div></section>
 
-    <section className="plus-section"><div className="row between"><div><span className="kicker">01 · LEARN WITH PURPOSE</span><h3>Amanora Academy</h3></div><span className="plus-icon">🎓</span></div><p className="muted small">Follow a learning path at your own pace. Lesson completion is saved on this device.</p>
+    <Locked plus={plus} onUnlock={unlock}><section className="plus-section"><div className="row between"><div><span className="kicker">01 · LEARN WITH PURPOSE</span><h3>Amanora Academy</h3></div><span className="plus-icon">🎓</span></div><p className="muted small">Follow a learning path at your own pace. Lesson completion is saved on this device.</p>
       {TRACKS.map(track => <article className="academy-track" key={track.id}><button className="track-head" onClick={() => setOpenTrack(openTrack === track.id ? "" : track.id)}><span className="track-icon">{track.icon}</span><span className="grow"><b>{track.title}</b><small>{track.level}</small></span><span className="track-progress">{track.lessons.filter((_,i) => completed.includes(`${track.id}-${i}`)).length}/{track.lessons.length}</span><span>{openTrack === track.id ? "⌃" : "⌄"}</span></button>
         {openTrack === track.id && <div className="track-body"><p>{track.detail}</p>{track.lessons.map((lesson,i) => { const id = `${track.id}-${i}`; const done = completed.includes(id); return <button className={`lesson-row${done ? " done" : ""}`} key={id} onClick={() => toggleLesson(id)}><span className="lesson-check">{done ? "✓" : "○"}</span><span>{lesson}</span><small>{done ? "Completed" : "Mark complete"}</small></button>; })}</div>}</article>)}
       <p className="tiny-note">Course progress records personal study. It is not a religious qualification or scholarly certification. Lesson content should be reviewed by qualified teachers before publication.</p>
-    </section>
+    </section></Locked>
 
     <section className="plus-section"><div className="row between"><div><span className="kicker">02 · YOUR 7-DAY JOURNEY</span><h3>Guided Deen reset</h3></div><span className="plus-icon">🌱</span></div><p className="muted small">A gentle weekly plan that turns learning into small, achievable actions. Your check-ins are saved on this device.</p><div className="stats plus-stats"><div><b>{challengeDone.length}/7</b><small>Days completed</small></div><div><b>{Math.round(challengeDone.length/7*100)}%</b><small>Journey progress</small></div></div>{WEEKLY_CHALLENGE.map(item=>{const done=challengeDone.includes(item.id);return <button className={`lesson-row${done?' done':''}`} key={item.id} onClick={()=>{const next=done?challengeDone.filter(x=>x!==item.id):[...challengeDone,item.id];setChallengeDone(next);save("amanora:plus-weekly-challenge",next);}}><span className="lesson-check">{done?'✓':'○'}</span><span className="grow"><b>{item.day} · {item.title}</b><small>{item.detail}</small></span><small>{done?'Done':'Mark done'}</small></button>;})}</section>
 
@@ -74,31 +78,31 @@ export function Plus({ log, oled, onOledChange, homeWidgets, onHomeWidgetsChange
       <div className="chart-card"><div className="row between"><b>Prayer check-ins</b><small className="muted">Last 7 days</small></div><div className="bar-chart">{days.map(d => <div className="bar-col" key={d.label}><div className="bar-track"><div className="bar-fill" style={{ "--bar-height": `${d.count/max*100}%` } as CSSProperties} /></div><small>{d.label}</small><b>{d.count}</b></div>)}</div><small className="tiny-note">Based on prayer check-ins saved on this device. This is a personal reflection tool, not a measure of faith.</small></div>
     </section>
 
-    <section className="plus-section"><div className="row between"><div><span className="kicker">05 · BUILD A ROUTINE</span><h3>Your goals</h3></div><span className="plus-icon">🎯</span></div>
+    <Locked plus={plus} onUnlock={unlock}><section className="plus-section"><div className="row between"><div><span className="kicker">05 · BUILD A ROUTINE</span><h3>Your goals</h3></div><span className="plus-icon">🎯</span></div>
       {goals.map((g,i) => <div className="goal-row" key={`${g.title}-${i}`}><span className="grow"><b>{g.title}</b><small>{Math.min(g.target,g.progress || 0)} / {g.target} minutes today</small><span className="goal-progress"><i style={{width:`${Math.min(100,(g.progress || 0)/g.target*100)}%`}} /></span></span><button className="chip" onClick={() => { const next=goals.map((item,j)=>j===i?{...item,progress:(item.progress||0)+5}:item); setGoals(next); save("amanora:plus-goals",next); }}>+5 min</button><button className="chip" onClick={() => { const next=goals.filter((_,j)=>j!==i); setGoals(next); save("amanora:plus-goals",next); }}>Remove</button></div>)}
       <div className="goal-form"><input className="input" value={goalName} onChange={e=>setGoalName(e.target.value)} placeholder="e.g. Quran reflection"/><input className="input goal-number" type="number" min="1" max="120" value={goalTarget} onChange={e=>setGoalTarget(e.target.value)} aria-label="Daily minutes"/><button className="btn" onClick={addGoal} disabled={!goalName.trim()}>Add goal</button></div>
-    </section>
+    </section></Locked>
 
-    <section className="plus-section"><div className="row between"><div><span className="kicker">06 · GROW TOGETHER</span><h3>Family circle</h3></div><span className="plus-icon">🤍</span></div><p className="muted small">Create a simple shared-device reminder list for family learning and encouragement.</p>
+    <Locked plus={plus} onUnlock={unlock}><section className="plus-section"><div className="row between"><div><span className="kicker">06 · GROW TOGETHER</span><h3>Family circle</h3></div><span className="plus-icon">🤍</span></div><p className="muted small">Create a simple shared-device reminder list for family learning and encouragement.</p>
       {family.map((name,i)=><div className="goal-row" key={`${name}-${i}`}><span>♡</span><b className="grow">{name}</b><button className="chip" onClick={()=>{const next=family.filter((_,j)=>j!==i);setFamily(next);save("amanora:plus-family",next);}}>Remove</button></div>)}
       <div className="goal-form"><input className="input" value={memberName} onChange={e=>setMemberName(e.target.value)} placeholder="Family member name"/><button className="btn" onClick={addFamily} disabled={!memberName.trim() || family.length>=5}>Add</button></div><p className="tiny-note">This list stays on this device. Shared accounts and cross-device syncing require a secure account backend.</p>
-    </section>
+    </section></Locked>
 
     <section className="plus-section bayan-plus-card"><div className="row between"><div><span className="kicker">07 · LISTEN DEEPER</span><h3>Bayan Listening Studio</h3></div><span className="plus-icon">🎙️</span></div><p className="muted small">A dedicated place for full-length lectures, topic collections and focused listening. Start with publisher-linked Mufti Menk talks, save favourites and build a queue.</p><div className="bayan-plus-grid"><div><b>Full talks</b><small>Long-form lectures, not short clips</small></div><div><b>Personal library</b><small>Favourites, queue and listening history</small></div><div><b>Focus tools</b><small>Playback speed and sleep timer for your own audio files</small></div><div><b>English + Urdu</b><small>Separate language shelves, with Urdu catalogue under review</small></div></div><button className="btn wide" onClick={onOpenBayan}>Explore Bayan Library →</button><p className="tiny-note">Premium licensed audio packs, offline downloads and cross-device listening will be activated only after content permissions and the secure audio service are in place.</p></section>
 
-    <section className="plus-section"><div className="row between"><div><span className="kicker">08 · YOUR SANCTUARY</span><h3>Premium experience</h3></div><span className="plus-icon">🌙</span></div>
+    <Locked plus={plus} onUnlock={unlock}><section className="plus-section"><div className="row between"><div><span className="kicker">08 · YOUR SANCTUARY</span><h3>Premium experience</h3></div><span className="plus-icon">🌙</span></div>
       <button className={`theme-option${oled ? " selected" : ""}`} onClick={()=>onOledChange(!oled)}><span className="theme-preview"/><span className="grow"><b>OLED night theme</b><small>Deep black surfaces for low-light reading</small></span><span className="pill">{oled ? "ON" : "OFF"}</span></button>
       <div className="widget-picker"><b>Customise Home shortcuts</b><small className="muted">Choose which quick-access tiles appear on your Home screen, including Prophet Stories.</small><div className="widget-options">{["Quran","Stories","Reels","Listen","Hadith","Worship","Learn","Quiz"].map(name=><button key={name} className={homeWidgets.includes(name)?"widget-chip active":"widget-chip"} onClick={()=>{const next=homeWidgets.includes(name)?homeWidgets.filter(x=>x!==name):[...homeWidgets,name];onHomeWidgetsChange(next);}}>{homeWidgets.includes(name)?"✓ ":"＋ "}{name}</button>)}</div></div>
       <button className="btn wide" onClick={onOpenListen}>Open Quran audio library →</button>
       <p className="tiny-note">Offline audio downloads, background loops and additional licensed high-quality reciters require an authorised audio catalogue and download service before they can be offered.</p>
-    </section>
+    </section></Locked>
 
     <section className="plus-pricing"><span className="plus-eyebrow">SUPPORT THE NEXT CHAPTER</span><h3>Amanora Plus</h3><p>Choose a membership option and continue to the existing Amanora UPI checkout.</p>
       <div className="plan-switch"><button className={selectedPlan === "monthly" ? "active" : ""} onClick={()=>setSelectedPlan("monthly")}>Monthly</button><button className={selectedPlan === "yearly" ? "active" : ""} onClick={()=>setSelectedPlan("yearly")}>Yearly · Save more</button></div>
       <div className="price-line"><b>{selectedPlan === "yearly" ? "₹799" : "₹99"}</b><span>/{selectedPlan === "yearly" ? "year" : "month"}</span></div>
       <ul><li>Guided Academy paths for Quran foundations, Arabic, Seerah, Hadith and daily dua</li><li>Bayan Listening Studio with full-lecture discovery, saved favourites and queues</li><li>7-day Guided Deen Reset, daily micro-quizzes and personal check-ins</li><li>Learning progress charts, study history and custom goals</li><li>OLED night reading and personalised Home shortcuts</li><li>Family learning planner and saved study notes on this device</li><li>New reviewed audio and study packs as licensed content becomes available</li></ul>
       <button className="btn wide gold-btn" onClick={() => onOpenPayment(selectedPlan)}>Continue to UPI checkout →</button>
-      <p className="tiny-note">UPI checkout opens the existing QR and payment form in your Profile tab. Payment must be verified securely before Plus membership is activated. The current frontend does not activate paid access automatically.</p>
+      <p className="tiny-note">After paying by UPI, send your payment screenshot and Device ID. You will receive an activation code to enter at the top of this tab. Plus then unlocks on your device.</p>
     </section>
   </div>;
 }
