@@ -13,3 +13,7 @@ node_modules
 dist
 android/.idea/
 \n# Android release signing credentials\nandroid/keystore.properties\nandroid/*.jks\nandroid/*.keystore\nkeys/
+
+PLUS-PRIVATE-KEY.json
+android/keystore.properties
+keys/
