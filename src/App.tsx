@@ -27,6 +27,7 @@ import { UmrahCompanion } from "./components/UmrahCompanion";
 import { AutoInsights } from "./components/AutoInsights";
 import { PlusUnlock } from "./components/PlusUnlock";
 import { AccountCard } from "./components/AccountCard";
+import { InstallPrompt } from "./components/InstallPrompt";
 import { useSession } from "./services/auth";
 
 type Tab = "Home" | "Quran" | "Explore" | "Learn" | "Plus" | "Profile" | "Reels" | "Listen" | "Bayan" | "Hadith" | "Worship" | "Quiz" | "Stories" | "Umrah";
@@ -694,6 +695,7 @@ export default function App() {
 
   return (
     <div className={"app" + (oled ? " oled-theme" : "")} data-language={language}>
+      <InstallPrompt />
       {toastMsg && <div role="status" aria-live="polite" onClick={() => setToastMsg("")} style={{position:"fixed",left:12,right:12,bottom:84,zIndex:9999,padding:"12px 14px",borderRadius:14,background:"#0f3d33",color:"#fff",border:"1px solid #d4af37",fontSize:14,textAlign:"center"}}>{toastMsg}</div>}
       <main className="main">{screen[tab]}</main>
       <nav className="nav">
