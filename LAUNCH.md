@@ -80,3 +80,9 @@ Users now register (name, email, phone, city, password) before the app opens. Pl
 
 If Supabase is not configured in `.env`, the registration screen is skipped and the app opens directly.
 Device activation codes (section 5) still work as a backup for users without an account.
+
+**If sign-in says "Please confirm your email first"**
+Supabase "Confirm email" is still ON. Fix it once:
+1. Supabase dashboard → Authentication → Sign In / Providers → Email → turn **Confirm email OFF** → Save. New users then enter the app straight after registering.
+2. For users who already registered, run this once in SQL Editor: `update auth.users set email_confirmed_at = now() where email_confirmed_at is null;`
+Supabase's built-in email sender allows only a few emails per hour, so confirmation emails can be delayed. Turning confirmation off avoids this.

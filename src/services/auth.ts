@@ -63,3 +63,9 @@ export async function setNewPassword(password: string) {
 }
 
 export async function logoutUser() { await supabase?.auth.signOut(); }
+
+export async function resendConfirmation(email: string) {
+  if (!supabase) throw new Error("Accounts are not available right now.");
+  const { error } = await supabase.auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: window.location.origin } });
+  if (error) throw new Error(friendly(error.message));
+}

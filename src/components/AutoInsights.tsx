@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { usePlus } from "../services/plusCodes";
+import { usePlus } from "../services/plusStatus";
 import { PRAYERS, dateKey, shareText } from "../lib";
 import { toast } from "../lib";
 

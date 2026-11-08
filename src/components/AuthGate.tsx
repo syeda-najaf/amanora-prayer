@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { loginUser, registerUser, sendReset, setNewPassword, supabaseConfigured, useSession } from "../services/auth";
+import { loginUser, registerUser, resendConfirmation, sendReset, setNewPassword, supabaseConfigured, useSession } from "../services/auth";
 
 type Mode = "register" | "login" | "forgot";
 
@@ -73,6 +73,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     </>}
     {err && <p className="err small">{err}</p>}
     {info && <p className="small" style={{ color: "#1d7a4a" }}>{info}</p>}
+    {mode === "login" && /confirm your email/i.test(err) && <button type="button" className="chip" disabled={busy} onClick={async () => { setBusy(true); try { await resendConfirmation(f.email); setErr(""); setInfo("Confirmation email sent again. Open it, tap the link, then sign in. Check Spam too."); } catch (x: any) { setErr(x.message); } setBusy(false); }}>Resend confirmation email</button>}
     <button className="btn wide gold-btn" disabled={busy}>{busy ? "Please wait…" : mode === "register" ? "Create account" : mode === "login" ? "Sign in" : "Send reset link"}</button>
     <div className="row between" style={{ marginTop: 10 }}>
       {mode !== "register" ? <button type="button" className="chip" onClick={() => { setMode("register"); setErr(""); setInfo(""); }}>New here? Register</button> : <button type="button" className="chip" onClick={() => { setMode("login"); setErr(""); setInfo(""); }}>Already registered? Sign in</button>}

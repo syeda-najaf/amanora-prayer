@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import { logoutUser, supabaseConfigured, useSession } from "../services/auth";
-import { usePlus } from "../services/plusCodes";
+import { usePlus } from "../services/plusStatus";
 import { toast } from "../lib";
 
 export function AccountCard() {

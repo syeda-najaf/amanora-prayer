@@ -9,6 +9,7 @@ export function OwnerMembers({ client }: { client: SupabaseClient }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [days, setDays] = useState("");
+  const [sendMail, setSendMail] = useState(true);
 
   const load = useCallback(async () => {
     const { data, error } = await client.rpc("amanora_admin_members");
@@ -22,8 +23,17 @@ export function OwnerMembers({ client }: { client: SupabaseClient }) {
     const d = Number(days);
     const { data, error } = await client.rpc("amanora_admin_grant_plus", { p_email: email, p_plan: plan, p_days: d > 0 ? d : null });
     setBusy(false);
-    if (error) setMsg(error.message); else { setMsg(`Plus activated for ${email} until ${new Date(data as string).toLocaleDateString()}.`); void load(); }
+    if (error) { setMsg(error.message); return; }
+    let note = `Plus activated for ${email} until ${new Date(data as string).toLocaleDateString()}.`;
+    if (sendMail) note += await mail(email, "both");
+    setMsg(note); void load();
   };
+  const mail = async (email: string, kind: "payment" | "activated" | "both") => {
+    const { data, error } = await client.functions.invoke("send-plus-email", { body: { email, kind } });
+    if (error || (data as { error?: string } | null)?.error) return " Emails were NOT sent: " + ((data as { error?: string } | null)?.error || "email service error") + ".";
+    return " Thank-you and activation emails sent.";
+  };
+  const resend = async (email: string) => { setBusy(true); setMsg(email + ":" + (await mail(email, "both"))); setBusy(false); };
   const revoke = async (email: string) => {
     if (!window.confirm(`Switch off Plus for ${email}?`)) return;
     setBusy(true);
@@ -44,6 +54,7 @@ export function OwnerMembers({ client }: { client: SupabaseClient }) {
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, phone, city" style={{ flex: 1, minWidth: 180, padding: 8 }} />
       <input value={days} onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))} placeholder="Custom days (optional)" style={{ width: 170, padding: 8 }} />
       <button className="owner-secondary" onClick={() => void load()}>Refresh</button>
+      <label style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="checkbox" checked={sendMail} onChange={(e) => setSendMail(e.target.checked)} /> Email the customer</label>
     </div>
     {msg && <p className="owner-notice owner-muted">{msg}</p>}
     <div style={{ overflowX: "auto" }}>
@@ -54,6 +65,7 @@ export function OwnerMembers({ client }: { client: SupabaseClient }) {
         <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
           <button className="owner-primary" disabled={busy} onClick={() => void grant(r.email, "monthly")}>Activate monthly</button>
           <button className="owner-primary" disabled={busy} onClick={() => void grant(r.email, "yearly")}>Activate yearly</button>
+          {r.plus_active && <button className="owner-secondary" disabled={busy} onClick={() => void resend(r.email)}>Email again</button>}
           {r.plus_active && <button className="owner-secondary" disabled={busy} onClick={() => void revoke(r.email)}>Switch off</button>}
         </div>
       </div>)}

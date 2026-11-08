@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { activateCode, deviceId, prettyId, removeCode, usePlus } from "../services/plusCodes";
+import { activateCode, deviceId, prettyId, removeCode, usePlus } from "../services/plusStatus";
 import { useSession } from "../services/auth";
 import { shareText, toast } from "../lib";
 
-const OWNER_EMAIL = "Syedanajaf832@gmail.com";
+const OWNER_EMAIL = "amanoraprayer@gmail.com";
 
 export function PlusUnlock({ onPay }: { onPay: () => void }) {
   const plus = usePlus();

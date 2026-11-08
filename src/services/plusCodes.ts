@@ -4,7 +4,7 @@ import { fetchMySubscription } from "./entitlements";
 /* Amanora Plus activation codes.
    The app holds only the PUBLIC key, so it can verify a code but nobody can create one without your private key.
    Codes are bound to one device ID and expire on a fixed date. */
-const PUBLIC_KEY: JsonWebKey = {"kty":"EC","crv":"P-256","x":"KV3A7S0D6AmgfVbn_J9GbCex5Dqm_p4dz9JHllj7iqw","y":"dkL8NnP8iiYENv7PIcaeDsq-LwL5XpuZQ2x5kZSy-gk"};
+const PUBLIC_KEY: JsonWebKey = {"kty":"EC","crv":"P-256","x":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","y":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"};
 const EPOCH = Date.UTC(2024, 0, 1);
 const DAY = 86400000;
 const CODE_KEY = "amanora:plus-code";

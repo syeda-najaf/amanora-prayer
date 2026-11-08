@@ -9,7 +9,7 @@ const json = (body: unknown, status: number, headers: Record<string, string>) =>
   new Response(JSON.stringify(body), { status, headers: { ...headers, 'Content-Type': 'application/json' } });
 
 Deno.serve(async (req) => {
-  const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  const allowed = [...(Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((s) => s.trim()).filter(Boolean), 'https://amanora-prayer.vercel.app', 'http://localhost:5173'];
   const cors = corsHeaders(req.headers.get('origin'), allowed);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, cors);

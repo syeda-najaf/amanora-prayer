@@ -292,6 +292,7 @@ export default function App() {
       }
       try {
         const ids = Array.from({ length: 30 }, (_, index) => firstId + index);
+        await ensureChannels();
         await LocalNotifications.cancel({ notifications: ids.map((id) => ({ id })) });
         if (!quranReminderEnabled) return;
         const permission = await LocalNotifications.checkPermissions();
@@ -403,6 +404,7 @@ export default function App() {
           toast("Allow notifications for Amanora in your phone settings, then try again.");
           return;
         }
+        await ensureChannels();
         await LocalNotifications.schedule({
           notifications: [{
             id: 51999,
@@ -413,12 +415,11 @@ export default function App() {
             sound: azanSound ? "azan.mp3" : undefined,
           }],
         });
-        await ensureChannels();
         toast("Test reminder arrives in about 5 seconds.");
         return;
       }
       if (typeof Notification === "undefined" || Notification.permission !== "granted") {
-        toast("Turn on Prayer-time reminders and allow browser notifications first.");
+        toast("On the web, reminders work only while Amanora is open. Turn on Prayer-time reminders and allow notifications, or use the Amanora Android app for the Azan when the app is closed.");
         return;
       }
       notifyUser("Amanora test reminder", "Notifications are enabled on this device.");
@@ -668,7 +669,7 @@ export default function App() {
           <summary><b>Privacy Policy</b></summary>
           <p className="small">Your bookmarks, prayer log, Quran progress, journal, settings and trip notes stay on your device. Amanora shows no ads and does not sell data.</p>
           <p className="small">Location is used only to calculate prayer times and Qibla; coordinates go to the prayer-time service to return times. Reminders are scheduled on your device. Your account details (name, email, phone, city) and Plus status are stored with Supabase; you can delete your account in Profile. Quran text and audio come from alQuran Cloud, Quran.com and Islamic Network.</p>
-          <p className="small">Contact or request deletion: Syedanajaf832@gmail.com</p>
+          <p className="small">Contact or request deletion: amanoraprayer@gmail.com</p>
         </details>
       </div>
     </div>

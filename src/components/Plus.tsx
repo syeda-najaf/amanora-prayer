@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Locked } from "./PlusUnlock";
-import { usePlus } from "../services/plusCodes";
+import { usePlus } from "../services/plusStatus";
 
 type PrayerLog = Record<string, string[]>;
 type Props = { log: PrayerLog; oled: boolean; onOledChange: (value: boolean) => void; homeWidgets: string[]; onHomeWidgetsChange: (value: string[]) => void; onOpenPayment: (plan: "monthly" | "yearly") => void; onOpenListen: () => void; onOpenBayan: () => void };

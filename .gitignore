@@ -1,25 +1,16 @@
-node_modules/
-dist/
-.env
-.env.*
-!.env.example
-.DS_Store
-.vercel/
-
-.env
-.env.*
-!.env.example
 node_modules
 dist
+.vercel
+.env
+.env.*
+!.env.example
 android/.idea/
-\n# Android release signing credentials\nandroid/keystore.properties\nandroid/*.jks\nandroid/*.keystore\nkeys/
-
-PLUS-PRIVATE-KEY.json
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
 android/keystore.properties
+android/*.jks
+android/*.keystore
 keys/
-
-# Amanora private Android signing keys
-android/amanora-release.jks
-android/keystore.properties
-*.jks
-*.keystore
+PLUS-PRIVATE-KEY.json
